@@ -72,7 +72,6 @@ fps = pyglet.clock.ClockDisplay()
 def on_draw():
     window.clear()
     with nested(framebuffer, program):
-        glActiveTexture(GL_TEXTURE0)
         with texture:
             quad()
    

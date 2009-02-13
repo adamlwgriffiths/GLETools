@@ -136,10 +136,3 @@ class ShaderProgram(GLObject, Context):
     
     def uniform_location(self, name):
         return glGetUniformLocation(self.id, name)
-    
-    def uniform_sampler2d(self, name, unit):
-        with self:
-            location = self.uniform_location(name)
-            if location != -1:
-                glUniform1i(location, unit - GL_TEXTURE0)
-
