@@ -78,6 +78,10 @@ class Texture(Context):
             type = gl_float,
             channels = luminance,
         ),
+        GL_LUMINANCE:Object(
+            type = gl_byte,
+            channels = luminance,
+        ),
     }
 
     target = GL_TEXTURE_2D

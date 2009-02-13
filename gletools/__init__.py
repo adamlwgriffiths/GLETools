@@ -8,5 +8,5 @@
 from .framebuffer import Framebuffer
 from .texture import Texture
 from .depthbuffer import Depthbuffer
-from .shader import FragmentShader, VertexShader, ShaderProgram
+from .shader import FragmentShader, VertexShader, ShaderProgram, Sampler2D
 from .util import projection, ortho

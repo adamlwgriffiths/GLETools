@@ -22,7 +22,7 @@ class Framebuffer(Context):
     def bind(self, id):
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, id)
 
-    def __init__(self):
+    def __init__(self, id=None):
         Context.__init__(self) 
         self._texture = None
         self._depth = None
