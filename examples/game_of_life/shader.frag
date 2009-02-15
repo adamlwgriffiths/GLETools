@@ -4,7 +4,7 @@ uniform sampler2D texture;
 float get_neighbor(vec2 off){
     vec2 pos = gl_FragCoord.xy + off;
     vec2 coord = vec2(pos.x/width, pos.y/height);
-    return texture2D(texture, coord);
+    return texture2D(texture, coord).r;
 }
 
 void main(void){
@@ -21,18 +21,18 @@ void main(void){
 
     if(self == 1.0){
         if(neighbors < 2.0){
-            gl_FragColor = 0.0;
+            gl_FragColor.rgb = vec3(0.0, 0.0, 0.0);
         }
         else if(neighbors > 3.0){
-            gl_FragColor = 0.0;
+            gl_FragColor.rgb = vec3(0.0, 0.0, 0.0);
         }
         else{
-            gl_FragColor = 1.0;
+            gl_FragColor.rgb = vec3(1.0, 1.0, 1.0);
         }
     }
     else{
         if(neighbors == 3.0){
-            gl_FragColor = 1.0;
+            gl_FragColor.rgb = vec3(1.0, 1.0, 1.0);
         }
     }
 }
