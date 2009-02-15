@@ -171,6 +171,8 @@ class Texture(Context):
         self.get_data(self.buffer)
 
     def __getitem__(self, (x, y)):
+        x, y = x%self.width, y%self.height
+
         channels = self.spec.channels.count
         pos = (x + y * self.width) * channels
         if channels == 1:
@@ -180,6 +182,8 @@ class Texture(Context):
             return self.buffer[pos:end]
 
     def __setitem__(self, (x, y), value):
+        x, y = x%self.width, y%self.height
+
         channels = self.spec.channels.count
         pos = (x + y * self.width) * channels
         if channels == 1:
