@@ -8,14 +8,16 @@ from pyglet.gl import *
 from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, projection, ortho, Sampler2D
 
 window = pyglet.window.Window(fullscreen=True)
-texture = Texture(window.width, window.height, format=GL_LUMINANCE, filter=GL_NEAREST)
+
 framebuffer = Framebuffer()
-framebuffer.texture = texture
+front = Texture(window.width, window.height, format=GL_LUMINANCE, filter=GL_NEAREST)
+back = Texture(window.width, window.height, format=GL_LUMINANCE, filter=GL_NEAREST)
+
 program = ShaderProgram(
     FragmentShader.open('game_of_life.frag'),
 )
-program.vars.width = float(texture.width)
-program.vars.height = float(texture.height)
+program.vars.width = float(front.width)
+program.vars.height = float(front.height)
 program.vars.texture = Sampler2D(GL_TEXTURE0)
 
 def quad():
@@ -31,6 +33,7 @@ def quad():
     glEnd()
 
 def spawn_glider(delta):
+    texture = back
     texture.retrieve()
 
     xoff = random.randint(3, texture.width-3)
@@ -65,20 +68,25 @@ def spawn_glider(delta):
     texture.update()
 
 pyglet.clock.schedule(lambda delta:None)
-pyglet.clock.schedule_interval(spawn_glider, 0.001)
+pyglet.clock.schedule_interval(spawn_glider, 0.1)
 fps = pyglet.clock.ClockDisplay()
 
 @window.event
 def on_draw():
+    global front, back
+
+    framebuffer.texture = front
+
     window.clear()
-    with nested(framebuffer, program):
-        with texture:
-            quad()
-   
-    with texture:
+    with nested(framebuffer, program, back):
         quad()
+   
+    with front:
+        quad()
+
     fps.draw()
 
+    front, back = back, front
+
 if __name__ == '__main__':
-    #spawn_glider(None)
     pyglet.app.run()
