@@ -87,7 +87,7 @@ fps = pyglet.clock.ClockDisplay()
 def on_draw():
     global front, back
 
-    framebuffer.texture = front
+    framebuffer.textures[0] = front
 
     window.clear()
     with nested(framebuffer, program, back):

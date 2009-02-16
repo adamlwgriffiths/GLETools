@@ -8,7 +8,7 @@ from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, projec
 window = pyglet.window.Window()
 texture = Texture(256, 256, filter=GL_LINEAR)
 framebuffer = Framebuffer()
-framebuffer.texture = texture
+framebuffer.textures[0] = texture
 program = ShaderProgram(
     FragmentShader('''
     uniform vec3 seed_vector;

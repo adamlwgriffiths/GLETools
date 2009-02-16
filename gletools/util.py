@@ -8,6 +8,11 @@
 from pyglet.gl import *
 from ctypes import byref
 
+def get(enum):
+    value = GLint()
+    glGetIntegerv(enum, byref(value))
+    return value.value
+
 class Context(object):
     def __init__(self):
         self.stack = list()
@@ -25,6 +30,7 @@ class Context(object):
         self.bind(self.id)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.check()
         id = self.stack.pop(-1)
         self.bind(id)
         self._exit()
@@ -33,6 +39,9 @@ class Context(object):
         pass
 
     def _exit(self):
+        pass
+
+    def check(self):
         pass
     
 def projection(fov, width, height, near=0.1, far=100.0):
