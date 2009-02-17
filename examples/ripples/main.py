@@ -3,7 +3,7 @@
     examples.ripples
     ~~~~~~~~~~~~~~~~
 
-    :copyright: 2008 by Henri Tuhola <henri.tuhola@gmail.com>
+    :copyright: 2009 by Henri Tuhola <henri.tuhola@gmail.com> / Florian Boesch <pyalot@gmail.com>
     :license: GNU AGPL v3 or later, see LICENSE for more details.
 """
 from __future__ import with_statement
@@ -17,17 +17,16 @@ from gletools import (
 
 window = pyglet.window.Window(fullscreen=True)
 framebuffer = Framebuffer()
-framebuffer.textures = [
-    Texture(window.width, window.height, filter=GL_LINEAR, format=GL_RGBA32F),
-    Texture(window.width, window.height, filter=GL_LINEAR, format=GL_RGBA32F)
-]
+tex1 = Texture(window.width, window.height, filter=GL_LINEAR, format=GL_RGBA32F)
+tex2 = Texture(window.width, window.height, filter=GL_LINEAR, format=GL_RGBA32F)
+tex3 = Texture(window.width, window.height, filter=GL_LINEAR, format=GL_RGBA32F)
 
 program = ShaderProgram(
     FragmentShader.open('ripples.frag'),
 )
 program.vars.resolution = float(window.width), float(window.height)
-program.vars.dest = Sampler2D(GL_TEXTURE0)
-program.vars.source = Sampler2D(GL_TEXTURE1)
+program.vars.tex2 = Sampler2D(GL_TEXTURE1)
+program.vars.tex3 = Sampler2D(GL_TEXTURE2)
 
 def quad(left, right, top, bottom):
     glBegin(GL_QUADS)
@@ -44,31 +43,39 @@ def quad(left, right, top, bottom):
 @window.event
 def on_mouse_motion(x,y,rx,ry):
     with framebuffer:
-        glColor3f(0.0, 0.7, 1.0)
-        glPointSize(3.0)
-        glBegin(GL_POINTS)
+        glColor4f(0.0, 0.7, 1.0, 1.0)
+        glLineWidth(1.0)
+        glBegin(GL_LINES)
         glVertex3f(x, y, 0)
+        glVertex3f(x+rx, y+ry, 0)
         glEnd()
+
+@window.event
+def on_mouse_press(x, y, button, modifiers):
+    with framebuffer:
+        glColor4f(0.0, 0.7, 1.0, 1.0)
+        quad(x-5, x+5, y+5, y-5)
 
 def simulate(delta):
     pass
 
-pyglet.clock.schedule_interval(simulate, 1.0/85.0)
+pyglet.clock.schedule(simulate)
 
-phase = 0
 @window.event
 def on_draw():
-    global phase
+    global tex1, tex2, tex3
     window.clear()
-    framebuffer.drawto = [GL_COLOR_ATTACHMENT0_EXT + phase]
-    framebuffer.textures[0].unit = GL_TEXTURE0 + phase
-    framebuffer.textures[1].unit = GL_TEXTURE0 + (phase + 1) % 2
-    with nested(framebuffer, program):
-        with nested(framebuffer.textures[0], framebuffer.textures[1]):
-            quad(left=0, bottom=0, right=window.width, top=window.height)
-    with framebuffer.textures[phase]:
+    framebuffer.textures[0] = tex1
+    tex1.unit = GL_TEXTURE0
+    tex2.unit = GL_TEXTURE1
+    tex3.unit = GL_TEXTURE2
+
+    with nested(framebuffer, program, tex2, tex3):
         quad(left=0, bottom=0, right=window.width, top=window.height)
-    phase = (phase+1)%2
+    with tex1:
+        quad(left=0, bottom=0, right=window.width, top=window.height)
+    
+    tex1, tex2, tex3 = tex2, tex3, tex1
 
 if __name__=='__main__':
     pyglet.app.run()
