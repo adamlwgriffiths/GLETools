@@ -15,7 +15,7 @@ from gletools import (
     ShaderProgram, FragmentShader, Texture, Framebuffer, Sampler2D
 )
 
-window = pyglet.window.Window()
+window = pyglet.window.Window(fullscreen=True)
 framebuffer = Framebuffer()
 framebuffer.textures = [
     Texture(window.width, window.height, filter=GL_LINEAR, format=GL_RGBA32F),
@@ -43,15 +43,17 @@ def quad(left, right, top, bottom):
 
 @window.event
 def on_mouse_motion(x,y,rx,ry):
-    t = framebuffer.textures[1]
-    t.retrieve()
-    t[x,y] = [0,1,1,0]
-    t.update()
+    with framebuffer:
+        glColor3f(0.0, 0.7, 1.0)
+        glPointSize(3.0)
+        glBegin(GL_POINTS)
+        glVertex3f(x, y, 0)
+        glEnd()
 
 def simulate(delta):
     pass
 
-pyglet.clock.schedule_interval(simulate, 1.0/60.0)
+pyglet.clock.schedule_interval(simulate, 1.0/85.0)
 
 phase = 0
 @window.event
