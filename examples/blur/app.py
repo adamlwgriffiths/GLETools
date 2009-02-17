@@ -3,7 +3,7 @@ from contextlib import nested
 
 import pyglet
 from pyglet.gl import *
-from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, Depthbuffer, projection, ortho, Sampler2D
+from gletools import ShaderProgram, VertexShader, FragmentShader, Texture, Framebuffer, Depthbuffer, projection, ortho, Sampler2D
 
 window = pyglet.window.Window()
 
@@ -11,16 +11,41 @@ framebuffer = Framebuffer()
 framebuffer.textures = [
     Texture(window.width, window.height, filter=GL_LINEAR),
     Texture(window.width, window.height, filter=GL_LINEAR),
+    Texture(window.width, window.height, filter=GL_LINEAR, format=GL_RGB32F, unit=GL_TEXTURE1),
 ]
 framebuffer.depth = Depthbuffer(window.width, window.height)
-framebuffer.drawto = GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT
 
-program = ShaderProgram(
+depth_shader = VertexShader('''
+    varying float depth;
+    void main()
+    {
+        depth = -(gl_ModelViewMatrix * gl_Vertex).z;
+        gl_Position = ftransform();
+        gl_FrontColor = gl_Color;
+    }
+
+''')
+
+blur = ShaderProgram(
+    depth_shader,
     FragmentShader.open('shader.frag'),
 )
-program.vars.width = float(window.width)
-program.vars.height = float(window.height)
-program.vars.texture = Sampler2D(GL_TEXTURE0)
+blur.vars.width = float(window.width)
+blur.vars.height = float(window.height)
+blur.vars.texture = Sampler2D(GL_TEXTURE0)
+blur.vars.depthmap = Sampler2D(GL_TEXTURE1)
+
+depth = ShaderProgram(
+    depth_shader,
+    FragmentShader('''
+        varying float depth;
+        void main(){
+            gl_FragData[0] = gl_Color;
+            gl_FragData[1] = gl_Color;
+            gl_FragData[2] = vec4(depth, depth, depth, 1.0);
+        }
+    '''),
+)
 
 rotation = 0.0
 
@@ -58,14 +83,14 @@ def on_draw():
     glRotatef(-45, 1, 0, 0)
     glRotatef(rotation, 0.0, 0.0, 1.0)
 
-    framebuffer.drawto = GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT
-    with framebuffer:
+    framebuffer.drawto = GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT
+    with nested(framebuffer, depth):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glColor3f(0.0, 1.0, 0.0)
         quad(left=-1, right=1, top=1, bottom=-1)
 
     framebuffer.drawto = [GL_COLOR_ATTACHMENT1_EXT]
-    with nested(framebuffer, program, framebuffer.textures[0]):
+    with nested(framebuffer, blur, framebuffer.textures[2], framebuffer.textures[0]):
         glColor3f(1.0, 1.0, 1.0)
         blur_geom()
 

@@ -100,18 +100,20 @@ class Texture(Context):
         glBindTexture(self.target, id)
 
     def _enter(self):
+        glActiveTexture(self.unit)
         glPushAttrib(GL_ENABLE_BIT)
         glEnable(self.target)
 
     def _exit(self):
         glPopAttrib()
 
-    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR):
+    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0):
         Context.__init__(self)
         self.width = width
         self.height = height
         self.format = format
         self.filter = filter
+        self.unit = unit
         spec = self.spec = self.specs[format]
         self.buffer_type = (spec.type.obj * (width * height * spec.channels.count))
         id = self.id = GLuint()
