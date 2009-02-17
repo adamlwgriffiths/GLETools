@@ -22,10 +22,10 @@ class Textures(object):
         self.textures = [None] * get(GL_MAX_COLOR_ATTACHMENTS)
 
     def __getitem__(self, i):
-        self.textures[i]
+        return self.textures[i]
 
     def __setitem__(self, i, texture):
-        with nested(self.framebuffer, texture):
+        with self.framebuffer:
             glFramebufferTexture2DEXT(
                 GL_FRAMEBUFFER_EXT,
                 GL_COLOR_ATTACHMENT0_EXT + i,
@@ -53,7 +53,7 @@ class Framebuffer(Context):
     _get = GL_FRAMEBUFFER_BINDING
     
     def bind(self, id):
-        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, id)
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, GLuint(id))
 
     def check(self):
         status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT)
@@ -65,12 +65,16 @@ class Framebuffer(Context):
                 raise self.Exception('unkown framebuffer object problem')
 
     def __init__(self, id=None):
+        if not gl_info.have_extension('GL_EXT_framebuffer_object'):
+            raise self.Exception('framebuffer object extension not available')
+
         Context.__init__(self) 
         self._texture = None
         self._depth = None
-        id = self.id = GLuint()
+        id = GLuint()
         glGenFramebuffersEXT(1, byref(id))
-        self.textures = Textures(self)
+        self.id = id.value
+        self._textures = Textures(self)
         
     def get_depth(self):
         return self._depth
@@ -83,4 +87,24 @@ class Framebuffer(Context):
                 GL_RENDERBUFFER_EXT,
                 depth.id,
             )
+
+    def _set_drawto(self, enums):
+        with self:
+            if isinstance(enums, int):
+                buffers = (GLenum * len(enums))(enums) 
+            else:
+                buffers = (GLenum * len(enums))(*enums) 
+            glDrawBuffers(len(enums), buffers)
+
+    drawto = property(None, _set_drawto)
+
+    def get_textures(self):
+        return self._textures
+    def set_textures(self, textures):
+        for i, texture in enumerate(textures):
+            self._textures[i] = texture
+    textures = property(get_textures, set_textures)
+
+
+
     depth = property(get_depth, set_depth)

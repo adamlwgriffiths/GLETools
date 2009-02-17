@@ -48,6 +48,10 @@ class Texture(Context):
         enum  = GL_LUMINANCE,
         count = 1,
     )
+    alpha = Object(
+        enum = GL_ALPHA,
+        count = 1,
+    )
 
     specs = {
         GL_RGB:Object(
@@ -82,6 +86,10 @@ class Texture(Context):
             type = gl_byte,
             channels = luminance,
         ),
+        GL_ALPHA:Object(
+            type = gl_byte,
+            channels = alpha,
+        )
     }
 
     target = GL_TEXTURE_2D

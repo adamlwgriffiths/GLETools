@@ -30,6 +30,8 @@ class GLObject(object):
 class Shader(GLObject):
     
     def __init__(self, source):
+        if not gl_info.have_extension(self.ext):
+            raise self.Exception('%s extension is not available' % self.ext)
         self.id = glCreateShaderObjectARB(self.type)
         self.source = source
         ptr = cast(c_char_p(source), POINTER(c_char))
@@ -50,9 +52,12 @@ class Shader(GLObject):
 
 class VertexShader(Shader):
     type = GL_VERTEX_SHADER_ARB
+    ext = 'GL_ARB_fragment_program'
+
 
 class FragmentShader(Shader):
     type = GL_FRAGMENT_SHADER_ARB
+    ext = 'GL_ARB_fragment_program'
 
 class Variable(object):
     def set(self, program, name):

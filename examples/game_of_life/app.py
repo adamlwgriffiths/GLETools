@@ -58,8 +58,8 @@ class LifFormat(object):
 window = pyglet.window.Window(fullscreen=True)
 
 framebuffer = Framebuffer()
-front = Texture(window.width, window.height, format=GL_RGBA, filter=GL_NEAREST)
-back = Texture(window.width, window.height, format=GL_RGBA, filter=GL_NEAREST)
+front = Texture(window.width, window.height, format=GL_LUMINANCE, filter=GL_NEAREST)
+back = Texture(window.width, window.height, format=GL_LUMINANCE, filter=GL_NEAREST)
 
 program = ShaderProgram(
     FragmentShader.open('shader.frag'),
@@ -106,7 +106,7 @@ def spawn_random(x, y):
     
     back.retrieve()
     for px, py in pattern:
-        back[xpos+px, ypos+py] = 255, 255, 255, 255
+        back[xpos+px, ypos+py] = 255
     back.update()
 
 def spawn_whole(x, y):
@@ -114,7 +114,7 @@ def spawn_whole(x, y):
     for xoff, yoff, pattern in catalogue:
         xpos, ypos = x + xoff, y + yoff
         for px, py in pattern:
-            back[xpos+px, ypos+py] = 255, 255, 255, 255
+            back[xpos+px, ypos+py] = 255
     back.update()
 
 @window.event

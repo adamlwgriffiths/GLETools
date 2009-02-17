@@ -19,14 +19,7 @@ class Context(object):
 
     def __enter__(self):
         self._enter()
-        id = GLint()
-        self.stack.append(
-            glGetIntegerv(
-                self._get,
-                byref(id),
-            )
-        )
-        self.stack.append(id.value)
+        self.stack.append(get(self._get))
         self.bind(self.id)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
