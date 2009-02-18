@@ -15,5 +15,6 @@ void main(void){
         get(tex3,  0,  1) + 
         get(tex3,  0, -1)
     );
-    gl_FragColor = (sample / 2.0 - get(tex2, 0,0)) * 0.998;
+    vec4 value = (sample / 2.001 - get(tex2, 0,0)) * 0.995;
+    gl_FragColor = value;
 }

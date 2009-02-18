@@ -8,6 +8,7 @@
 """
 from __future__ import with_statement
 from contextlib import nested
+import random
 
 import pyglet
 from pyglet.gl import *
@@ -43,7 +44,7 @@ def quad(left, right, top, bottom):
 @window.event
 def on_mouse_motion(x,y,rx,ry):
     with framebuffer:
-        glColor4f(0.0, 0.7, 1.0, 1.0)
+        glColor4f(0.0, 1.5, 3.0, 1.0)
         glLineWidth(1.0)
         glBegin(GL_LINES)
         glVertex3f(x, y, 0)
@@ -53,13 +54,24 @@ def on_mouse_motion(x,y,rx,ry):
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     with framebuffer:
-        glColor4f(0.0, 0.7, 1.0, 1.0)
-        quad(x-5, x+5, y+5, y-5)
+        glColor4f(0.0, 1.5, 3.0, 1.0)
+        glPointSize(4.0)
+        glBegin(GL_POINTS)
+        glVertex3f(x, y, 0)
+        glEnd()
 
-def simulate(delta):
-    pass
+def rain(delta):
+    x = random.randint(0, window.width)
+    y = random.randint(0, window.height)
+    with framebuffer:
+        glColor4f(0.0, 1.5, 3.0, 1.0)
+        glPointSize(4.0)
+        glBegin(GL_POINTS)
+        glVertex3f(x, y, 0)
+        glEnd()
 
-pyglet.clock.schedule(simulate)
+pyglet.clock.schedule_interval(rain, 0.2)
+pyglet.clock.schedule(lambda delta: None)
 
 @window.event
 def on_draw():
@@ -73,9 +85,15 @@ def on_draw():
     with nested(framebuffer, program, tex2, tex3):
         quad(left=0, bottom=0, right=window.width, top=window.height)
     with tex1:
+        glColor4f(1.0, 1.0, 1.0, 1.0)
         quad(left=0, bottom=0, right=window.width, top=window.height)
     
     tex1, tex2, tex3 = tex2, tex3, tex1
 
 if __name__=='__main__':
+    glEnable(GL_POINT_SMOOTH)
+    glEnable(GL_LINE_SMOOTH)
+    glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE)
+    glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE)
+    glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE)
     pyglet.app.run()
