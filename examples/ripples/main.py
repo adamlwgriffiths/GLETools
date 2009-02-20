@@ -63,9 +63,10 @@ def on_mouse_press(x, y, button, modifiers):
 def rain(delta):
     x = random.randint(0, window.width)
     y = random.randint(0, window.height)
+    size = random.random() * 3
     with framebuffer:
-        glColor4f(0.0, 1.5, 3.0, 1.0)
-        glPointSize(4.0)
+        glColor4f(0.0, size/2, size, 1.0)
+        glPointSize(size)
         glBegin(GL_POINTS)
         glVertex3f(x, y, 0)
         glEnd()

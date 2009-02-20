@@ -3,10 +3,12 @@ from contextlib import nested
 
 import pyglet
 from pyglet.gl import *
-from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, projection, ortho
+from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, Projection, Ortho
 
 window = pyglet.window.Window()
 texture = Texture(64, 64, filter=GL_LINEAR)
+ortho = Ortho(0, 0, texture.width, texture.height)
+projection = Projection(0, 0, window.width, window.height)
 framebuffer = Framebuffer()
 framebuffer.textures[0] = texture
 program = ShaderProgram(
@@ -41,16 +43,16 @@ pyglet.clock.schedule(simulate, 0.03)
 @window.event
 def on_draw():
     window.clear()
-    with nested(framebuffer, program):
-        ortho(texture.width, texture.height)
+    with nested(framebuffer, program, ortho):
         quad(0.0, texture.width)
    
-    with texture:
-        projection(45, window.width, window.height)
+    with nested(texture, projection):
+        glPushMatrix()
         glTranslatef(0, 0, -3)
         glRotatef(-45, 1, 0, 0)
         glRotatef(rotation, 0.0, 0.0, 1.0)
         quad(-1, 1)
+        glPopMatrix()
 
 if __name__ == '__main__':
     pyglet.app.run()
