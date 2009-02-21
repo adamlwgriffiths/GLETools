@@ -7,7 +7,7 @@ from contextlib import nested
 
 import pyglet
 from pyglet.gl import *
-from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, projection, ortho, Sampler2D
+from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, Sampler2D
 
 class LifFormat(object):
     meta = re.compile(r'#(Life|D)')

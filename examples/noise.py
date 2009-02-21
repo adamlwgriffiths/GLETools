@@ -3,12 +3,14 @@ from contextlib import nested
 
 import pyglet
 from pyglet.gl import *
-from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, projection, ortho
+from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, Projection, Ortho
 
 window = pyglet.window.Window()
 texture = Texture(256, 256, filter=GL_LINEAR)
 framebuffer = Framebuffer()
 framebuffer.textures[0] = texture
+ortho = Ortho(0, 0, texture.width, texture.height)
+projection = Projection(0, 0, window.width, window.height)
 program = ShaderProgram(
     FragmentShader('''
     uniform vec3 seed_vector;
@@ -50,16 +52,16 @@ pyglet.clock.schedule(simulate, 0.03)
 def on_draw():
     window.clear()
     program.vars.seed_vector = [random() for _ in xrange(3)]
-    with nested(framebuffer, program):
-        ortho(texture.width, texture.height)
+    with nested(framebuffer, program, ortho):
         quad(0.0, texture.width)
-   
-    with texture:
-        projection(45, window.width, window.height)
+  
+    with nested(texture, projection):
+        glPushMatrix()
         glTranslatef(0, 0, -3)
         glRotatef(-45, 1, 0, 0)
         glRotatef(rotation, 0.0, 0.0, 1.0)
         quad(-1, 1)
+        glPopMatrix()
 
 if __name__ == '__main__':
     pyglet.app.run()

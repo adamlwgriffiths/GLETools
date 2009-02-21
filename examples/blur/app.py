@@ -3,7 +3,11 @@ from contextlib import nested
 
 import pyglet
 from pyglet.gl import *
-from gletools import ShaderProgram, VertexShader, FragmentShader, Texture, Framebuffer, Depthbuffer, projection, ortho, Sampler2D
+from gletools import (
+    ShaderProgram, VertexShader, FragmentShader,
+    Texture, Framebuffer, Depthbuffer, Sampler2D,
+    Projection, Ortho, 
+)
 
 window = pyglet.window.Window()
 
@@ -72,31 +76,32 @@ def simulate(delta):
     rotation += 40.0 * delta
 
 pyglet.clock.schedule_interval(simulate, 0.01)
+projection = Projection(0, 0, window.width, window.height)
+ortho = Ortho(0, 0, window.width, window.height)
     
 @window.event
 def on_draw():
     window.clear()
 
-    projection(45, window.width, window.height)
-    glLoadIdentity()
-    glTranslatef(0, 0, -3)
-    glRotatef(-45, 1, 0, 0)
-    glRotatef(rotation, 0.0, 0.0, 1.0)
+    with projection:
+        glPushMatrix()
+        glTranslatef(0, 0, -3)
+        glRotatef(-45, 1, 0, 0)
+        glRotatef(rotation, 0.0, 0.0, 1.0)
 
-    framebuffer.drawto = GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT
-    with nested(framebuffer, depth):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glColor3f(0.0, 1.0, 0.0)
-        quad(left=-1, right=1, top=1, bottom=-1)
+        framebuffer.drawto = GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT
+        with nested(framebuffer, depth):
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            glColor3f(0.0, 1.0, 0.0)
+            quad(left=-1, right=1, top=1, bottom=-1)
 
-    framebuffer.drawto = [GL_COLOR_ATTACHMENT1_EXT]
-    with nested(framebuffer, blur, framebuffer.textures[2], framebuffer.textures[0]):
-        glColor3f(1.0, 1.0, 1.0)
-        blur_geom()
+        framebuffer.drawto = [GL_COLOR_ATTACHMENT1_EXT]
+        with nested(framebuffer, blur, framebuffer.textures[2], framebuffer.textures[0]):
+            glColor3f(1.0, 1.0, 1.0)
+            blur_geom()
+        glPopMatrix()
 
-    with framebuffer.textures[1]:
-        ortho(window.width, window.height)
-        glLoadIdentity()
+    with nested(framebuffer.textures[1], ortho):
         glColor4f(1.0, 1.0, 1.0, 1.0)
         quad(left=0, right=window.width, top=window.height, bottom=0)
 
