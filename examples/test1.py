@@ -2,8 +2,8 @@ from __future__ import with_statement
 from contextlib import nested
 
 import pyglet
-from pyglet.gl import *
 from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, Projection, Ortho
+from gletools.gl import *
 
 window = pyglet.window.Window()
 texture = Texture(64, 64, filter=GL_LINEAR)
@@ -15,8 +15,8 @@ program = ShaderProgram(
     FragmentShader('''
     uniform float size;
     void main(){
-        vec4 vec = vec4(gl_FragCoord.x-size/2, gl_FragCoord.y-size/2, 0.0, 1.0) / size;
-        gl_FragColor = (normalize(vec) + 1) / 2;
+        vec4 vec = vec4(gl_FragCoord.x-size/2.0, gl_FragCoord.y-size/2.0, 0.0, 1.0) / size;
+        gl_FragColor = (normalize(vec) + 1.0) / 2.0;
     }''')
 )
 program.vars.size = 64.0

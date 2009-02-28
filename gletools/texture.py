@@ -7,10 +7,7 @@
 
 from __future__ import with_statement
 
-from pyglet.gl import *
-from pyglet.gl.glext_arb import *
-from pyglet.gl.glext_nv import *
-
+from gletools.gl import *
 from .util import Context
 
 __all__ = ['Texture']
@@ -68,19 +65,19 @@ class Texture(Context):
             type = gl_short,
             channels = rgb,
         ),
-        GL_RGBA32F_ARB:Object(
+        GL_RGBA32F:Object(
             type = gl_float,
             channels = rgba,
         ),
-        GL_RGB16F_ARB:Object(
+        GL_RGB16F:Object(
             type = gl_half_float,
             channels = rgb,
         ),
-        GL_RGB32F_ARB:Object(
+        GL_RGB32F:Object(
             type = gl_float,
             channels = rgb,
         ),
-        GL_LUMINANCE32F_ARB:Object(
+        GL_LUMINANCE32F:Object(
             type = gl_float,
             channels = luminance,
         ),

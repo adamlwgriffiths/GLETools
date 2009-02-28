@@ -11,10 +11,10 @@ from contextlib import nested
 import random
 
 import pyglet
-from pyglet.gl import *
 from gletools import (
     ShaderProgram, FragmentShader, Texture, Framebuffer, Sampler2D
 )
+from gletools.gl import *
 
 window = pyglet.window.Window(fullscreen=True)
 framebuffer = Framebuffer()
@@ -94,7 +94,8 @@ def on_draw():
 if __name__=='__main__':
     glEnable(GL_POINT_SMOOTH)
     glEnable(GL_LINE_SMOOTH)
-    glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE)
-    glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE)
-    glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE)
+    if gl_info.have_extension('ARB_color_buffer_float'):
+        glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE)
+        glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE)
+        glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE)
     pyglet.app.run()

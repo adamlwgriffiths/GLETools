@@ -8,12 +8,9 @@
 from __future__ import with_statement
 
 from ctypes import byref
-from pyglet.gl import *
-from pyglet.gl.glext_arb import *
-from pyglet.gl.glext_nv import *
-
 from contextlib import nested
 
+from gletools.gl import *
 from .util import Context
 
 __all__ = ['DepthBuffer']

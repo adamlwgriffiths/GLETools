@@ -7,9 +7,9 @@
 
 from __future__ import with_statement
 
-from pyglet.gl import *
 from ctypes import c_char_p, pointer, cast, byref, c_char, create_string_buffer
 
+from gletools.gl import *
 from .util import Context
 
 __all__ = 'VertexShader', 'FragmentShader', 'ShaderProgram'
@@ -52,8 +52,7 @@ class Shader(GLObject):
 
 class VertexShader(Shader):
     type = GL_VERTEX_SHADER_ARB
-    ext = 'GL_ARB_fragment_program'
-
+    ext = 'GL_ARB_vertex_program'
 
 class FragmentShader(Shader):
     type = GL_FRAGMENT_SHADER_ARB

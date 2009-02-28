@@ -3,8 +3,8 @@ from __future__ import with_statement
 from contextlib import nested
 
 import pyglet
-from pyglet.gl import *
 from gletools import Framebuffer, Texture
+from gletools.gl import *
 
 window = pyglet.window.Window()
 texture = Texture(window.width, window.height)

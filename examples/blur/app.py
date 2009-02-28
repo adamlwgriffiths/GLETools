@@ -2,12 +2,12 @@ from __future__ import with_statement
 from contextlib import nested
 
 import pyglet
-from pyglet.gl import *
 from gletools import (
     ShaderProgram, VertexShader, FragmentShader,
     Texture, Framebuffer, Depthbuffer, Sampler2D,
     Projection, Ortho, 
 )
+from gletools.gl import *
 
 window = pyglet.window.Window()
 
@@ -15,7 +15,7 @@ framebuffer = Framebuffer()
 framebuffer.textures = [
     Texture(window.width, window.height, filter=GL_LINEAR),
     Texture(window.width, window.height, filter=GL_LINEAR),
-    Texture(window.width, window.height, filter=GL_LINEAR, format=GL_RGB32F, unit=GL_TEXTURE1),
+    Texture(window.width, window.height, filter=GL_LINEAR, unit=GL_TEXTURE1),
 ]
 framebuffer.depth = Depthbuffer(window.width, window.height)
 

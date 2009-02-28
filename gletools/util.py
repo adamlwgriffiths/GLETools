@@ -5,8 +5,9 @@
     :license: GNU AGPL v3 or later, see LICENSE for more details.
 """
 from __future__ import with_statement
-from pyglet.gl import *
 from ctypes import byref
+
+from gletools.gl import *
 
 _get_type_map = {
     int: (GLint, glGetIntegerv),

@@ -2,8 +2,8 @@ from __future__ import with_statement
 from contextlib import nested
 
 import pyglet
-from pyglet.gl import *
 from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, Projection, Ortho
+from gletools.gl import *
 
 window = pyglet.window.Window()
 texture = Texture(256, 256, filter=GL_LINEAR)
