@@ -9,6 +9,8 @@ from __future__ import with_statement
 
 from ctypes import byref
 from pyglet.gl import *
+from pyglet.gl.glext_arb import *
+from pyglet.gl.glext_nv import *
 
 from contextlib import nested
 
@@ -19,7 +21,7 @@ __all__ = ['Framebuffer']
 class Textures(object):
     def __init__(self, framebuffer):
         self.framebuffer = framebuffer
-        self.textures = [None] * get(GL_MAX_COLOR_ATTACHMENTS)
+        self.textures = [None] * get(GL_MAX_COLOR_ATTACHMENTS_EXT)
 
     def __getitem__(self, i):
         return self.textures[i]
@@ -50,7 +52,7 @@ class Framebuffer(Context):
     }
     class Exception(Exception): pass
 
-    _get = GL_FRAMEBUFFER_BINDING
+    _get = GL_FRAMEBUFFER_BINDING_EXT
     
     def bind(self, id):
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, GLuint(id))
