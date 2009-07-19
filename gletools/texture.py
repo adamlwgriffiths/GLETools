@@ -10,6 +10,8 @@ from __future__ import with_statement
 from gletools.gl import *
 from .util import Context
 
+import Image
+
 __all__ = ['Texture']
 
 class Object(object):
@@ -106,7 +108,7 @@ class Texture(Context):
     def _exit(self):
         glPopAttrib()
 
-    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0):
+    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, data=None):
         Context.__init__(self)
         self.width = width
         self.height = height
@@ -118,9 +120,29 @@ class Texture(Context):
         id = self.id = GLuint()
 
         glGenTextures(1, byref(id))
-        self.buffer = self.buffer_type()
+        if data:
+            self.buffer = self.buffer_type(*data)
+        else:
+            self.buffer = self.buffer_type()
+
         self.update()
-        #self.set_data(buffer)
+
+    @classmethod
+    def open(cls, filename, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0):
+        image = Image.open(filename)
+        spec = cls.specs[format]
+        isbyte = spec.type == cls.gl_byte
+        width, height = image.size
+        channel_count = spec.channels.count
+
+        data = list()
+        for color in image.getdata():
+            color = color[:channel_count]
+            if not isbyte:
+                color = map(lambda c: c/256.0, color)
+            data.extend(color)
+        
+        return cls(width, height, format=format, filter=filter, unit=unit, data=data)
         
     def _quad(self, scale):
         t = 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0
@@ -161,7 +183,6 @@ class Texture(Context):
             glInterleavedArrays(GL_T4F_V4F, 0, self._quad(scale))
             glDrawArrays(GL_QUADS, 0, 4)
             glPopClientAttrib()
-        glPopAttrib()
         glPopMatrix()
 
     def get_data(self, buffer):
