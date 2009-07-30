@@ -7,7 +7,7 @@
 
 from __future__ import with_statement
 
-from ctypes import c_char_p, pointer, cast, byref, c_char, create_string_buffer
+from ctypes import c_char_p, pointer, cast, byref, c_char, create_string_buffer, c_float
 
 from gletools.gl import *
 from .util import Context
@@ -15,6 +15,7 @@ from .util import Context
 __all__ = 'VertexShader', 'FragmentShader', 'ShaderProgram'
 
 class GLObject(object):
+    _del = glDeleteObjectARB
     class Exception(Exception): pass
 
     def log(self):
@@ -25,7 +26,7 @@ class GLObject(object):
         return log.value
     
     def __del__(self):
-        glDeleteObjectARB(self.id)
+        self._del(self.id)
 
 class Shader(GLObject):
     
@@ -72,6 +73,13 @@ class Sampler2D(Variable):
     def do_set(self, location):
         glUniform1i(location, self.value)
 
+class Mat4(Variable):
+    def __init__(self, *values):
+        self.values = (c_float*16)(*values)
+
+    def do_set(self, location):
+        glUniformMatrix4fv(location, len(self.values), GL_FALSE, self.values)
+
 typemap = {
     float:{
         1:glUniform1f,
@@ -111,7 +119,7 @@ class ShaderProgram(GLObject, Context):
     def bind(self, id):
         glUseProgram(id)
 
-    def __init__(self, *shaders):
+    def __init__(self, *shaders, **variables):
         Context.__init__(self)
         self.id = glCreateProgramObjectARB()
         self.shaders = list(shaders)
@@ -121,6 +129,8 @@ class ShaderProgram(GLObject, Context):
         self.link()
 
         self.vars = Vars(self)
+        for name, value in variables.items():
+            setattr(self.vars, name, value)
 
     def link(self):
         glLinkProgramARB(self.id)

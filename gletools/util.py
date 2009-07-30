@@ -47,6 +47,19 @@ class Context(object):
     def check(self):
         pass
 
+class Group(object):
+    def __init__(self, *members, **named_members):
+        self.__dict__.update(named_members)
+        self._members = list(members) + named_members.values()
+    
+    def __enter__(self):
+        for member in self._members:
+            member.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for member in reversed(self._members):
+            member.__exit__(exc_type, exc_val, exc_tb)
+
 class MatrixMode(object):
     def __init__(self, mode):
         self.mode = mode
@@ -80,7 +93,19 @@ class Projection(object):
 
         glPopAttrib()
 
-class Ortho(object):
+class Viewport(object):
+    def __init__(self, x, y, width, height):
+        self.x, self.y = x, y
+        self.width, self.height = width, height
+
+    def __enter__(self):
+        glPushAttrib(GL_VIEWPORT_BIT)
+        glViewport(self.x, self.y, self.width, self.height)
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        glPopAttrib()
+
+class Screen(object):
     def __init__(self, x, y, width, height):
         self.x, self.y = x, y
         self.width, self.height = width, height
@@ -99,3 +124,19 @@ class Ortho(object):
             glPopMatrix()
 
         glPopAttrib()
+
+class Ortho(object):
+    def __init__(self, left, right, top, bottom, near, far):
+        self.left, self.right = left, right 
+        self.top, self.bottom = top, bottom 
+        self.near, self.far = near, far
+
+    def __enter__(self):
+        with MatrixMode(GL_PROJECTION):
+            glPushMatrix()
+            glLoadIdentity()
+            glOrtho(self.left, self.right, self.bottom, self.top, self.near, self.far)
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        with MatrixMode(GL_PROJECTION):
+            glPopMatrix()

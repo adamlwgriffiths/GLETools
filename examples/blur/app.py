@@ -5,7 +5,7 @@ import pyglet
 from gletools import (
     ShaderProgram, VertexShader, FragmentShader,
     Texture, Framebuffer, Depthbuffer, Sampler2D,
-    Projection, Ortho, 
+    Projection, Screen, 
 )
 from gletools.gl import *
 
@@ -77,7 +77,7 @@ def simulate(delta):
 
 pyglet.clock.schedule_interval(simulate, 0.01)
 projection = Projection(0, 0, window.width, window.height)
-ortho = Ortho(0, 0, window.width, window.height)
+ortho = Screen(0, 0, window.width, window.height)
     
 @window.event
 def on_draw():

@@ -56,10 +56,12 @@ class Texture(Context):
 
     specs = {
         GL_RGB:Object(
+            pil = 'RGB',
             type = gl_byte,
             channels = rgb,
         ),
         GL_RGBA:Object(
+            pil = 'RGBA',
             type = gl_byte,
             channels = rgba,
         ),
@@ -68,6 +70,7 @@ class Texture(Context):
             channels = rgb,
         ),
         GL_RGBA32F:Object(
+            pil = 'RGBA',
             type = gl_float,
             channels = rgba,
         ),
@@ -76,10 +79,12 @@ class Texture(Context):
             channels = rgb,
         ),
         GL_RGB32F:Object(
+            pil = 'RGB',
             type = gl_float,
             channels = rgb,
         ),
         GL_LUMINANCE32F:Object(
+            pil = 'L',
             type = gl_float,
             channels = luminance,
         ),
@@ -101,8 +106,8 @@ class Texture(Context):
         glBindTexture(self.target, id)
 
     def _enter(self):
+        glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT)
         glActiveTexture(self.unit)
-        glPushAttrib(GL_ENABLE_BIT)
         glEnable(self.target)
 
     def _exit(self):
@@ -129,20 +134,31 @@ class Texture(Context):
 
     @classmethod
     def open(cls, filename, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0):
-        image = Image.open(filename)
         spec = cls.specs[format]
-        isbyte = spec.type == cls.gl_byte
+        pil_format = getattr(spec, 'pil', None)
+        if not pil_format:
+            raise Exception('cannot load')
+        image = Image.open(filename)
+        image = image.convert(pil_format)
         width, height = image.size
-        channel_count = spec.channels.count
-
-        data = list()
-        for color in image.getdata():
-            color = color[:channel_count]
-            if not isbyte:
-                color = map(lambda c: c/256.0, color)
-            data.extend(color)
+        data = image.tostring()
+        
+        if spec.type == cls.gl_float:
+            data = map(lambda x: ord(x)/255.0, data)
         
         return cls(width, height, format=format, filter=filter, unit=unit, data=data)
+
+    def save(self, filename):
+        image = Image.new('RGB', (self.width, self.height))
+        if self.spec.type == self.gl_byte:
+            image.putdata(self)
+        else:
+            def convert(pixel):
+                r, g, b = pixel
+                return int(r*255), int(g*255), int(b*255)
+            data = map(convert, self)
+            image.putdata(data)
+        image.save(filename)
         
     def _quad(self, scale):
         t = 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0
@@ -180,6 +196,7 @@ class Texture(Context):
         glTranslatef(x, y, z)
         with self:
             glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
+            glClientActiveTexture(self.unit)
             glInterleavedArrays(GL_T4F_V4F, 0, self._quad(scale))
             glDrawArrays(GL_QUADS, 0, 4)
             glPopClientAttrib()
@@ -221,3 +238,12 @@ class Texture(Context):
         else:
             end = pos + channels
             self.buffer[pos:end] = value
+
+    def __iter__(self):
+        channels = self.spec.channels.count
+        if channels == 1:
+            for value in self.buffer:
+                yield value
+        else:
+            for i in range(0, len(self.buffer), channels):
+                yield self.buffer[i:i+channels]

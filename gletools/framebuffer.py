@@ -64,7 +64,7 @@ class Framebuffer(Context):
             else:
                 raise self.Exception('unkown framebuffer object problem')
 
-    def __init__(self, id=None):
+    def __init__(self, *textures):
         if not gl_info.have_extension('GL_EXT_framebuffer_object'):
             raise self.Exception('framebuffer object extension not available')
 
@@ -75,6 +75,8 @@ class Framebuffer(Context):
         glGenFramebuffersEXT(1, byref(id))
         self.id = id.value
         self._textures = Textures(self)
+        for i, texture in enumerate(textures):
+            self.textures[i] = texture
         
     def get_depth(self):
         return self._depth
@@ -87,6 +89,7 @@ class Framebuffer(Context):
                 GL_RENDERBUFFER_EXT,
                 depth.id,
             )
+    depth = property(get_depth, set_depth)
 
     def _set_drawto(self, enums):
         with self:
@@ -95,7 +98,6 @@ class Framebuffer(Context):
             else:
                 buffers = (GLenum * len(enums))(*enums) 
             glDrawBuffers(len(enums), buffers)
-
     drawto = property(None, _set_drawto)
 
     def get_textures(self):
@@ -106,5 +108,3 @@ class Framebuffer(Context):
     textures = property(get_textures, set_textures)
 
 
-
-    depth = property(get_depth, set_depth)

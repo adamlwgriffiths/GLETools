@@ -2,14 +2,14 @@ from __future__ import with_statement
 from contextlib import nested
 
 import pyglet
-from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, Projection, Ortho
+from gletools import ShaderProgram, FragmentShader, Texture, Framebuffer, Projection, Screen
 from gletools.gl import *
 
 window = pyglet.window.Window()
 texture = Texture(256, 256, filter=GL_LINEAR)
 framebuffer = Framebuffer()
 framebuffer.textures[0] = texture
-ortho = Ortho(0, 0, texture.width, texture.height)
+screen = Screen(0, 0, texture.width, texture.height)
 projection = Projection(0, 0, window.width, window.height)
 program = ShaderProgram(
     FragmentShader('''
@@ -52,7 +52,7 @@ pyglet.clock.schedule(simulate, 0.03)
 def on_draw():
     window.clear()
     program.vars.seed_vector = [random() for _ in xrange(3)]
-    with nested(framebuffer, program, ortho):
+    with nested(framebuffer, program, screen):
         quad(0.0, texture.width)
   
     with nested(texture, projection):
