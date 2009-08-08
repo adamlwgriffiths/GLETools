@@ -171,3 +171,5 @@ def quad(left=-0.5, top=-0.5, right=0.5, bottom=0.5, scale=1.0):
     glTexCoord2f(0.0, 1.0)
     glVertex3f(left, bottom, 0.0)
     glEnd()
+
+class DependencyException(Exception): pass

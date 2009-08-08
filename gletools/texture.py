@@ -8,9 +8,13 @@
 from __future__ import with_statement
 
 from gletools.gl import *
-from .util import Context
+from .util import Context, DependencyException
 
-import Image
+try:
+    import Image
+    has_pil = True
+except:
+    has_pil = False
 
 __all__ = ['Texture']
 
@@ -134,6 +138,8 @@ class Texture(Context):
 
     @classmethod
     def open(cls, filename, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0):
+        if not has_pil:
+            raise DependencyException('PIL is requried to open image files')
         spec = cls.specs[format]
         pil_format = getattr(spec, 'pil', None)
         if not pil_format:
@@ -145,6 +151,8 @@ class Texture(Context):
         
         if spec.type == cls.gl_float:
             data = map(lambda x: ord(x)/255.0, data)
+        else:
+            data = map(ord, data)
         
         return cls(width, height, format=format, filter=filter, unit=unit, data=data)
 
