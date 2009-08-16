@@ -135,6 +135,7 @@ class Texture(Context):
             self.buffer = self.buffer_type()
 
         self.update()
+        self.display = self.make_display()
 
     @classmethod
     def open(cls, filename, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0):
@@ -168,22 +169,23 @@ class Texture(Context):
             image.putdata(data)
         image.save(filename)
         
-    def _quad(self, scale):
-        t = 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0
+    def make_display(self):
+        uvs = 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0
         x1 = 0.0
         y1 = 0.0
         z = 0.0
-        x2 = self.width * scale
-        y2 = self.height * scale
-        return (GLfloat * 32)(
-             t[0],  t[1],  t[2],  1.0,
-             x1,    y1,    z,     1.0,
-             t[3],  t[4],  t[5],  1.0,
-             x2,    y1,    z,     1.0,
-             t[6],  t[7],  t[8],  1.0,
-             x2,    y2,    z,     1.0,
-             t[9],  t[10], t[11], 1.0,
-             x1,    y2,    z,     1.0,
+        x2 = self.width
+        y2 = self.height
+        verts = (
+             x1,    y1,    z,
+             x2,    y1,    z,
+             x2,    y2,    z,
+             x1,    y2,    z,
+        )
+
+        return pyglet.graphics.vertex_list(4,
+            ('v3f', verts),
+            ('t2f', uvs),
         )
 
     def set_data(self, data):
@@ -203,11 +205,7 @@ class Texture(Context):
         glPushMatrix()
         glTranslatef(x, y, z)
         with self:
-            glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
-            glClientActiveTexture(self.unit)
-            glInterleavedArrays(GL_T4F_V4F, 0, self._quad(scale))
-            glDrawArrays(GL_QUADS, 0, 4)
-            glPopClientAttrib()
+            self.display.draw(GL_QUADS)
         glPopMatrix()
 
     def get_data(self, buffer):
