@@ -71,6 +71,27 @@ class MatrixMode(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         glPopAttrib()
 
+class SphereMapping(object):
+    @staticmethod
+    def __enter__():
+        glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT)
+        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP)
+        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP)
+        glEnable(GL_TEXTURE_GEN_S)
+        glEnable(GL_TEXTURE_GEN_T)
+    @staticmethod
+    def __exit__(exc_type, exc_val, exc_tb):
+        glPopAttrib()
+
+class DepthTest(object):
+    @staticmethod
+    def __enter__():
+        glPushAttrib(GL_DEPTH_BUFFER_BIT)
+        glEnable(GL_DEPTH_TEST)
+    @staticmethod
+    def __exit__(exc_type, exc_val, exc_tb):
+        glPopAttrib()
+
 class Matrix(object):
     @staticmethod
     def __enter__():

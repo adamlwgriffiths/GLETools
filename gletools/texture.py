@@ -170,7 +170,7 @@ class Texture(Context):
         image.save(filename)
         
     def make_display(self):
-        uvs = 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0
+        uvs = 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0
         x1 = 0.0
         y1 = 0.0
         z = 0.0
