@@ -92,6 +92,15 @@ class DepthTest(object):
     def __exit__(exc_type, exc_val, exc_tb):
         glPopAttrib()
 
+class Lighting(object):
+    @staticmethod
+    def __enter__():
+        glPushAttrib(GL_LIGHTING_BIT)
+        glEnable(GL_LIGHTING)
+    @staticmethod
+    def __exit__(exc_type, exc_val, exc_tb):
+        glPopAttrib()
+
 class Matrix(object):
     @staticmethod
     def __enter__():
