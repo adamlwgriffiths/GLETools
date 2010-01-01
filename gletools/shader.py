@@ -80,6 +80,21 @@ class Mat4(Variable):
     def do_set(self, location):
         glUniformMatrix4fv(location, len(self.values), GL_FALSE, self.values)
 
+class Vec(Variable):
+    typemap = [
+        glUniform1fv,
+        glUniform2fv,
+        glUniform3fv,
+        glUniform4fv,
+    ]
+    def __init__(self, type, values):
+        self.setter = self.typemap[type-1]
+        self.count = len(values)
+        self.values = (c_float*(type*self.count))(*values)
+
+    def do_set(self, location):
+        self.setter(location, self.count, self.values)
+
 typemap = {
     float:{
         1:glUniform1f,

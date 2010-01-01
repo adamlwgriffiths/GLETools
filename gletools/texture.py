@@ -57,6 +57,10 @@ class Texture(Context):
         enum = GL_ALPHA,
         count = 1,
     )
+    depth = Object(
+        enum = GL_DEPTH_COMPONENT,
+        count = 1,
+    )
 
     specs = {
         GL_RGB:Object(
@@ -99,7 +103,11 @@ class Texture(Context):
         GL_ALPHA:Object(
             type = gl_byte,
             channels = alpha,
-        )
+        ),
+        GL_DEPTH_COMPONENT:Object(
+            type = gl_float,
+            channels = depth,
+        ),
     }
 
     target = GL_TEXTURE_2D

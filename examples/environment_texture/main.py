@@ -30,9 +30,9 @@ def simulate(delta, _):
 
 class Bunny(object):
     def __init__(self):
-        v3f = map(float, open('vertices').read().strip().split())
-        n3f = map(float, open('normals').read().strip().split())
-        indices = map(int, open('faces').read().strip().split())
+        v3f = map(float, open('../vertices').read().strip().split())
+        n3f = map(float, open('../normals').read().strip().split())
+        indices = map(int, open('../faces').read().strip().split())
         count = len(v3f)/3
         self.display = pyglet.graphics.vertex_list_indexed(count, indices,
             ('v3f', v3f),
