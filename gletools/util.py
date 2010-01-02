@@ -101,6 +101,14 @@ class Lighting(object):
     def __exit__(exc_type, exc_val, exc_tb):
         glPopAttrib()
 
+class Color(object):
+    @staticmethod
+    def __enter__():
+        glPushAttrib(GL_CURRENT_BIT)
+    @staticmethod
+    def __exit__(exc_type, exc_val, exc_tb):
+        glPopAttrib()
+
 class Matrix(object):
     @staticmethod
     def __enter__():
