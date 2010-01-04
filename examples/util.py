@@ -119,11 +119,11 @@ class Processor(object):
         self.render_target.textures[0] = output
         return self.render_target
 
-class Bunny(object):
-    def __init__(self):
-        v3f = [float(c)*0.2 for c in open('bunny/vertices').read().strip().split()]
-        n3f = map(float, open('bunny/normals').read().strip().split())
-        faces = map(int, open('bunny/faces').read().strip().split())
+class Mesh(object):
+    def __init__(self, path):
+        v3f = [float(c)*0.2 for c in open('%s/vertices' % path).read().strip().split()]
+        n3f = map(float, open('%s/normals' % path).read().strip().split())
+        faces = map(int, open('%s/faces' % path).read().strip().split())
         self.display = pyglet.graphics.vertex_list_indexed(len(v3f)/3, faces,
             ('v3f', v3f),
             ('n3f', n3f),

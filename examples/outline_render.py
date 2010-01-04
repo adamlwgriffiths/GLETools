@@ -7,14 +7,14 @@ from gletools import (
     Texture, Projection, Vec, Lighting, Color
 )
 from gletools.gl import *
-from util import Bunny, Processor, Kernel, offsets, gl_init
+from util import Mesh, Processor, Kernel, offsets, gl_init
 
 ### setup ###
 
 window = pyglet.window.Window()
 projection = Projection(0, 0, window.width, window.height, near=18, far=50)
 texture = Texture(window.width, window.height, GL_RGBA32F)
-bunny = Bunny()
+bunny = Mesh('meshes/bunny')
 processor = Processor(window.width, window.height)
 
 ### Shaders and helpers ###
