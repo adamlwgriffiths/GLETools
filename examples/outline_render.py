@@ -15,7 +15,7 @@ window = pyglet.window.Window()
 projection = Projection(0, 0, window.width, window.height, near=18, far=50)
 texture = Texture(window.width, window.height, GL_RGBA32F)
 bunny = Mesh('meshes/bunny')
-processor = Processor(window.width, window.height)
+processor = Processor(texture)
 
 ### Shaders and helpers ###
 

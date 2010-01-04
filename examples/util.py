@@ -20,9 +20,12 @@ def gauss(x, height=1.0, width=1.0, position=0.0):
     return height*pow(e, - pow(x-position, 2) / (2*pow(width*0.308, 2)))
 
 class Kernel(object):
-    def __init__(self, size):
+    def __init__(self, size, values=None):
         self.size = size
-        self.values = [0.0] * size**2
+        if values:
+            self.values = map(float, values)
+        else:
+            self.values = [0.0] * size**2
 
     def __getitem__(self, (x,y)):
         return self.values[x+y*self.size]
@@ -85,15 +88,21 @@ def quad(top, right, bottom, left):
     glEnd()
 
 class Processor(object):
-    def __init__(self, width, height):
-        self.temp = Texture(width, height, GL_RGBA32F)
-        self.width = width
-        self.height = height
+    def __init__(self, ref):
+        self.temp = Texture(
+            width       = ref.width,
+            height      = ref.height,
+            format      = ref.format,
+            filter      = ref.filter,
+            mipmap      = ref.mipmap,
+        )
+        self.width = ref.width
+        self.height = ref.height
         self.fbo = Framebuffer(self.temp)
-        self.view = Screen(0, 0, width, height)
+        self.view = Screen(0, 0, self.width, self.height)
         
         self.render_target = Framebuffer(self.temp)
-        self.render_target.depth = Depthbuffer(width, height)
+        self.render_target.depth = Depthbuffer(self.width, self.height)
     
     def filter(self, texture, effect):
         self.fbo.textures[0] = self.temp
