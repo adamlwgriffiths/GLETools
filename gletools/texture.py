@@ -125,8 +125,9 @@ class Texture(Context):
     def _exit(self):
         glPopAttrib()
 
-    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, data=None):
+    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, data=None, mipmap=False):
         Context.__init__(self)
+        self.mipmap = mipmap
         self.width = width
         self.height = height
         self.format = format
@@ -200,13 +201,22 @@ class Texture(Context):
         with self:
             glTexParameteri(self.target, GL_TEXTURE_MIN_FILTER, self.filter)
             glTexParameteri(self.target, GL_TEXTURE_MAG_FILTER, self.filter)
-            glTexImage2D(
-                self.target, 0, self.format,
-                self.width, self.height,
-                0,
-                self.spec.channels.enum, self.spec.type.enum,
-                data,
-            )
+            if self.mipmap:
+                gluBuild2DMipmaps(
+                    self.target, 3, self.format,
+                    self.width, self.height,
+                    self.spec.channels.enum, self.spec.type.enum,
+                    data,
+                )
+            else:
+                glTexImage2D(
+                    self.target, 0, self.format,
+                    self.width, self.height,
+                    0,
+                    self.spec.channels.enum, self.spec.type.enum,
+                    data,
+                )
+
             glFlush()
 
     def draw(self, x=0, y=0, z=0, scale=1.0):
