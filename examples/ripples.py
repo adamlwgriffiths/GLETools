@@ -48,7 +48,7 @@ class Ripples(object):
         return self.tex3
 
 if __name__=='__main__':
-    window = pyglet.window.Window(fullscreen=True)
+    window = pyglet.window.Window()
     ripples = Ripples(window.width, window.height)
     pyglet.clock.schedule(lambda delta: None)
    

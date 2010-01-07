@@ -9,12 +9,13 @@ from gletools import (
 )
 
 class Heightmap(object):
-    def __init__(self, source):
-        self.source = source
-        self.view = Screen(0, 0, source.width, source.height)
+    def __init__(self, width, height, scale=0.2):
+        self.width = width
+        self.height = height
+        self.view = Screen(0, 0, width, height)
 
-        self.vertex_texture = Texture(source.width, source.height, GL_RGB)
-        self.normal_texture = Texture(source.width, source.height, GL_RGB)
+        self.vertex_texture = Texture(width, height, GL_RGB)
+        self.normal_texture = Texture(width, height, GL_RGB)
         self.fbo = Framebuffer(
             self.vertex_texture,
             self.normal_texture,
@@ -23,10 +24,10 @@ class Heightmap(object):
 
         self.program = ShaderProgram(
             FragmentShader.open('shaders/heightmap_normal.frag'),
-            offsets = (1.0/source.width, 1.0/source.height),
-            scale = 0.2,
+            offsets = (1.0/width, 1.0/height),
+            scale = scale,
         )
-        self.vbo = self.generate_vbo(source.width, source.height)
+        self.vbo = self.generate_vbo(width, height)
 
     def generate_vbo(self, width, height):
         v3f = []
@@ -60,9 +61,9 @@ class Heightmap(object):
  
         pass
 
-    def update(self):
-        with nested(self.fbo, self.view, self.source, self.program):
-            quad(self.source.width, self.source.height, 0, 0)
+    def update_from(self, source):
+        with nested(self.fbo, self.view, source, self.program):
+            quad(self.width, self.height, 0, 0)
             self.vbo.vertices.copy_from(self.vertex_texture)
             self.vbo.normals.copy_from(self.normal_texture)
 
@@ -73,15 +74,14 @@ if __name__ == '__main__':
     window = pyglet.window.Window()
     projection = Projection(0, 0, window.width, window.height, near=0.1, far=100)
     angle = ChangeValue()
-    heightmap = Heightmap(
-        Texture.open('images/heightmap.png')
-    )
+    texture = Texture.open('images/heightmap.png')
+    heightmap = Heightmap(texture.width, texture.height)
 
     @window.event
     def on_draw():
         window.clear()
         
-        heightmap.update()
+        heightmap.update_from(texture)
 
         with nested(projection, Lighting):
             glPushMatrix()
@@ -92,7 +92,7 @@ if __name__ == '__main__':
             heightmap.draw()
             glPopMatrix()
 
-        heightmap.source.draw(10, 10)
+        texture.draw(10, 10)
         heightmap.vertex_texture.draw(148, 10)
         heightmap.normal_texture.draw(286, 10)
 
