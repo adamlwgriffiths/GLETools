@@ -68,9 +68,6 @@ def on_draw():
         vbo.n3f.copy_from(normal_texture)
 
     with nested(projection, Lighting):
-        glClearColor(0.0,0.0,0.0,0.0)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        
         glPushMatrix()
         glTranslatef(0, 0, -1)
         glRotatef(20, 1, 0, 0)
@@ -85,8 +82,4 @@ def on_draw():
 
 if __name__ == '__main__':
     gl_init()
-    if gl_info.have_extension('ARB_color_buffer_float'):
-        glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE)
-        glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE)
-        glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE)
     pyglet.app.run()
