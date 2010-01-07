@@ -54,7 +54,8 @@ if __name__ == '__main__':
         gaussian.filter(height_texture, 1)
         heightmap.update_from(height_texture)
         
-        with nested(projection, Lighting):
+        with nested(projection, Lighting, Color):
+            glColor3f(7/256.0, 121/256.0, 208/256.0)
             glPushMatrix()
             glTranslatef(0, 0, -1)
             glRotatef(20, 1, 0, 0)
