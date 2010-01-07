@@ -213,7 +213,7 @@ def quad(left=-0.5, top=-0.5, right=0.5, bottom=0.5, scale=1.0):
 class DependencyException(Exception): pass
 
 def gen_buffers(amount=1):
-    ids = (c_ulong*amount)()
+    ids = (c_uint*amount)()
     glGenBuffers(amount, ids)
     if amount == 1:
         return ids[0]
