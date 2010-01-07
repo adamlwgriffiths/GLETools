@@ -16,74 +16,85 @@ from gletools import (
 )
 from gletools.gl import *
 
-window = pyglet.window.Window(fullscreen=True)
-framebuffer = Framebuffer()
-tex1 = Texture(window.width, window.height, filter=GL_NEAREST, format=GL_RGBA32F)
-tex2 = Texture(window.width, window.height, filter=GL_NEAREST, format=GL_RGBA32F)
-tex3 = Texture(window.width, window.height, filter=GL_NEAREST, format=GL_RGBA32F)
+class Ripples(object):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.framebuffer = Framebuffer()
+        self.tex1 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F)
+        self.tex2 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F)
+        self.tex3 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F)
 
-program = ShaderProgram(
-    FragmentShader.open('shaders/ripples.frag'),
-    offsets = (1.0/window.width, 1.0/window.height),
-    tex2 = Sampler2D(GL_TEXTURE1),
-    tex3 = Sampler2D(GL_TEXTURE2),
-)
+        self.program = ShaderProgram(
+            FragmentShader.open('shaders/ripples.frag'),
+            offsets = (1.0/width, 1.0/height),
+            tex2 = Sampler2D(GL_TEXTURE1),
+            tex3 = Sampler2D(GL_TEXTURE2),
+        )
 
-@window.event
-def on_mouse_motion(x,y,rx,ry):
-    with nested(framebuffer, Color):
-        glColor4f(0.0, 1.5, 3.0, 1.0)
-        glLineWidth(1.0)
-        glBegin(GL_LINES)
-        glVertex3f(x, y, 0)
-        glVertex3f(x+rx, y+ry, 0)
-        glEnd()
+    def step(self):
+        self.framebuffer.textures[0] = self.tex1
+        self.tex1.unit = GL_TEXTURE0
+        self.tex2.unit = GL_TEXTURE1
+        self.tex3.unit = GL_TEXTURE2
 
-@window.event
-def on_mouse_press(x, y, button, modifiers):
-    with nested(framebuffer, Color):
-        glColor4f(0.0, 1.5, 3.0, 1.0)
-        glBegin(GL_QUADS)
-        size = 1.0
-        glVertex3f(x+size, y+size, 0)
-        glVertex3f(x+size, y-size, 0)
-        glVertex3f(x-size, y-size, 0)
-        glVertex3f(x-size, y+size, 0)
-        glEnd()
+        with nested(self.framebuffer, self.program, self.tex2, self.tex3):
+            quad(self.width, self.height, 0, 0)
 
-def rain(delta):
-    x = random.randint(0, window.width)
-    y = random.randint(0, window.height)
-    size = random.random() * 1.5
-    with nested(framebuffer, Color):
-        glBegin(GL_QUADS)
-        glColor4f(0.0, size/2, size, 1.0)
-        glVertex3f(x+size, y+size, 0)
-        glVertex3f(x+size, y-size, 0)
-        glVertex3f(x-size, y-size, 0)
-        glVertex3f(x-size, y+size, 0)
-        glEnd()
+        self.tex1, self.tex2, self.tex3 = self.tex2, self.tex3, self.tex1
 
-pyglet.clock.schedule_interval(rain, 0.2)
-pyglet.clock.schedule(lambda delta: None)
-
-@window.event
-def on_draw():
-    global tex1, tex2, tex3
-    window.clear()
-    framebuffer.textures[0] = tex1
-    tex1.unit = GL_TEXTURE0
-    tex2.unit = GL_TEXTURE1
-    tex3.unit = GL_TEXTURE2
-
-    with nested(framebuffer, program, tex2, tex3):
-        quad(window.width, window.height, 0, 0)
-
-    tex1.draw()
-    
-    tex1, tex2, tex3 = tex2, tex3, tex1
+    @property
+    def result(self):
+        return self.tex3
 
 if __name__=='__main__':
+    window = pyglet.window.Window(fullscreen=True)
+    ripples = Ripples(window.width, window.height)
+    pyglet.clock.schedule(lambda delta: None)
+   
+    @window.event
+    def on_mouse_motion(x, y, rx, ry):
+        with nested(ripples.framebuffer, Color):
+            glColor4f(0.0, 1.5, 3.0, 1.0)
+            glLineWidth(1.0)
+            glBegin(GL_LINES)
+            glVertex3f(x, y, 0)
+            glVertex3f(x+rx, y+ry, 0)
+            glEnd()
+
+    @window.event
+    def on_mouse_press(x, y, button, modifiers):
+        with nested(ripples.framebuffer, Color):
+            glColor4f(0.0, 1.5, 3.0, 1.0)
+            glBegin(GL_QUADS)
+            size = 1.0
+            glVertex3f(x+size, y+size, 0)
+            glVertex3f(x+size, y-size, 0)
+            glVertex3f(x-size, y-size, 0)
+            glVertex3f(x-size, y+size, 0)
+            glEnd()
+    
+    def rain(delta):
+        x = random.randint(0, ripples.width)
+        y = random.randint(0, ripples.height)
+        size = random.random() * 1.5
+        with nested(ripples.framebuffer, Color):
+            glBegin(GL_QUADS)
+            glColor4f(0.0, size/2, size, 1.0)
+            glVertex3f(x+size, y+size, 0)
+            glVertex3f(x+size, y-size, 0)
+            glVertex3f(x-size, y-size, 0)
+            glVertex3f(x-size, y+size, 0)
+            glEnd()
+        
+    pyglet.clock.schedule_interval(rain, 0.2)
+
+    @window.event
+    def on_draw():
+        window.clear()
+        ripples.step()
+        ripples.result.draw()
+
     glEnable(GL_POINT_SMOOTH)
     glEnable(GL_LINE_SMOOTH)
     if gl_info.have_extension('ARB_color_buffer_float'):

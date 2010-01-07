@@ -6,6 +6,6 @@ float random(vec2 uv){
 
 void main(){
     vec2 uv = gl_TexCoord[0].st;
-    float intensity = random(uv);
+    float intensity = random(uv+seed);
     gl_FragColor = vec4(intensity, intensity, intensity, 1.0);
 }

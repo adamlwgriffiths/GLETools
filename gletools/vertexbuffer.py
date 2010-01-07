@@ -45,8 +45,8 @@ typemap = {
 }
 
 enablers = {
-    'v': vertex_pointer,
-    'n': normal_pointer,
+    'v': (vertex_pointer, 'vertices'),
+    'n': (normal_pointer, 'normals')
 }
 
 class Buffer(object):
@@ -91,13 +91,13 @@ class VertexObject(object):
             enabler, component_length, type = format
             mode = modes[mode_storage][mode_use]
             component_length = int(component_length)
-            enabler = enablers[enabler]
+            enabler, member_name = enablers[enabler]
             ctype, enum = typemap[type]
             if pbo:
                 buffer = Buffer(mode, GL_PIXEL_PACK_BUFFER, GL_ARRAY_BUFFER, component_length, enabler, enum, ctype, data)
             else:
                 buffer = Buffer(mode, GL_ARRAY_BUFFER, GL_ARRAY_BUFFER, component_length, enabler, enum, ctype, data)
-            setattr(self, format, buffer)
+            setattr(self, member_name, buffer)
             self._buffers.append(buffer)
            
     def draw(self, primitive=GL_TRIANGLES):
