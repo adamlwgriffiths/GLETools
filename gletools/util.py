@@ -200,14 +200,22 @@ def quad(left=-0.5, top=-0.5, right=0.5, bottom=0.5, scale=1.0):
     top *= scale
     bottom *= scale
     glBegin(GL_QUADS)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3f(right, bottom, 0.0)
     glTexCoord2f(1.0, 0.0)
+    glVertex3f(right, bottom, 0.0)
+    glTexCoord2f(1.0, 1.0)
     glVertex3f(right, top, 0.0)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3f(left, top, 0.0)
     glTexCoord2f(0.0, 1.0)
+    glVertex3f(left, top, 0.0)
+    glTexCoord2f(0.0, 0.0)
     glVertex3f(left, bottom, 0.0)
     glEnd()
 
 class DependencyException(Exception): pass
+
+def gen_buffers(amount=1):
+    ids = (c_ulong*amount)()
+    glGenBuffers(amount, ids)
+    if amount == 1:
+        return ids[0]
+    else:
+        return ids

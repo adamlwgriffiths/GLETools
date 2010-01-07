@@ -13,3 +13,4 @@ from .util import (
     get, Projection, Screen, Ortho, Viewport, Group, interval, quad, Matrix, DependencyException, DepthTest, SphereMapping,
     Lighting, Color
 )
+from .vertexbuffer import VertexObject

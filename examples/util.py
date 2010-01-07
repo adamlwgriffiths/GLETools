@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from math import e, pow, sqrt
-from gletools import Framebuffer, Depthbuffer, Screen, Texture, Vec
+from gletools import Framebuffer, Depthbuffer, Screen, Texture, Vec, VertexObject
 from gletools.gl import *
 from contextlib import nested
 
@@ -133,13 +133,14 @@ class Mesh(object):
         v3f = [float(c)*0.2 for c in open('%s/vertices' % path).read().strip().split()]
         n3f = map(float, open('%s/normals' % path).read().strip().split())
         faces = map(int, open('%s/faces' % path).read().strip().split())
-        self.display = pyglet.graphics.vertex_list_indexed(len(v3f)/3, faces,
-            ('v3f', v3f),
-            ('n3f', n3f),
+        self.display = VertexObject(
+            indices = faces,
+            n3f = n3f,
+            v3f = v3f,
         )
 
     def draw(self):
-        self.display.draw(GL_TRIANGLES)
+        self.display.draw()
 
 def offsets(min, max, window):
     result = []
@@ -150,3 +151,15 @@ def offsets(min, max, window):
             result.append(xoff)
             result.append(yoff)
     return Vec(2, result)
+
+class ChangeValue(object):
+    def __init__(self, start=0.0, change=10.0, rate=0.02):
+        self.value = start
+        self.change = change
+        pyglet.clock.schedule_interval(self.simulate, rate)
+       
+    def simulate(self, delta):
+        self.value += self.change * delta
+
+    def __float__(self):
+        return self.value

@@ -8,7 +8,7 @@
 from __future__ import with_statement
 
 from gletools.gl import *
-from .util import Context, DependencyException
+from .util import Context, DependencyException, quad
 
 try:
     import Image
@@ -196,6 +196,12 @@ class Texture(Context):
             ('v3f', verts),
             ('t2f', uvs),
         )
+    
+    def draw(self, x=0, y=0, scale=1.0):
+        with self:
+            quad(
+                left=x, top=self.height+y, right=self.width+x, bottom=y, scale=scale
+            )
 
     def set_data(self, data):
         with self:
@@ -218,13 +224,6 @@ class Texture(Context):
                 )
 
             glFlush()
-
-    def draw(self, x=0, y=0, z=0, scale=1.0):
-        glPushMatrix()
-        glTranslatef(x, y, z)
-        with self:
-            self.display.draw(GL_QUADS)
-        glPopMatrix()
 
     def get_data(self, buffer):
         with self:

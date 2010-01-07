@@ -33,11 +33,14 @@ class Gaussian(object):
 
 if __name__ == '__main__':
     window = pyglet.window.Window()
-    projection = Projection(0, 0, window.width, window.height, near=18, far=50)
-    texture = Texture(window.width, window.height, GL_RGBA32F)
-    processor = Processor(texture)
+    projection = Projection(0, 0, window.width/8, window.height/8, near=18, far=50)
+    render = Texture(window.width/8, window.height/8, GL_RGBA32F)
+    render_processor = Processor(render)
+    display = Texture(window.width, window.height, GL_RGBA32F)
+    display_processor = Processor(display)
     bunny = Mesh('meshes/bunny')
-    gaussian = Gaussian(processor)
+    gaussian_render = Gaussian(render_processor)
+    gaussian_display = Gaussian(display_processor)
 
     angle = 0.0
     def simulate(delta):
@@ -49,7 +52,7 @@ if __name__ == '__main__':
     def on_draw():
         window.clear()
         
-        with nested(processor.renderto(texture), projection, Lighting, Color):
+        with nested(render_processor.renderto(render), projection, Lighting, Color):
             glClearColor(0.0,0.0,0.0,0.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             
@@ -62,8 +65,10 @@ if __name__ == '__main__':
             bunny.draw()
             glPopMatrix()
 
-        gaussian.filter(texture, 5)
-        processor.blit(texture)
+        gaussian_render.filter(render, 7)
+        display_processor.copy(render, display)
+        display_processor.blit(display)
+        #display_processor.blit(render)
 
     gl_init()
     pyglet.app.run()
