@@ -8,7 +8,7 @@
 from __future__ import with_statement
 
 from gletools.gl import *
-from .util import Context, DependencyException, Group, gen_buffers
+from .util import Context, DependencyException, Group, gen_buffers, enabled, get
 from ctypes import c_float, c_int
 
 def vertex_pointer(size, type):
@@ -61,6 +61,7 @@ class Buffer(object):
         self.id = gen_buffers()
         glBindBuffer(self.data_target, self.id)
         glBufferData(self.data_target, sizeof(data), data, mode)
+        glBindBuffer(self.data_target, 0)
 
     def draw_bind(self):
         glBindBuffer(self.draw_target, self.id)
@@ -102,15 +103,18 @@ class VertexObject(object):
             self._buffers.append(buffer)
     
     def __enter__(self):
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT | GL_CLIENT_PIXEL_STORE_BIT)
         for buffer in self._buffers:
             buffer.draw_bind()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         glPopClientAttrib()
 
-    def draw(self, primitive=GL_TRIANGLES):
-        with self:
+    def draw(self, primitive=GL_TRIANGLES, bind=True):
+        if bind:
+            with self:
+                glDrawElements(primitive, self.size, GL_UNSIGNED_INT, 0)
+        else:
             glDrawElements(primitive, self.size, GL_UNSIGNED_INT, 0)
 
     def draw_instanced(self, amount, primitive=GL_TRIANGLES):

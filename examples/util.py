@@ -133,14 +133,14 @@ class Mesh(object):
         v3f = [float(c)*0.2 for c in open('%s/vertices' % path).read().strip().split()]
         n3f = map(float, open('%s/normals' % path).read().strip().split())
         faces = map(int, open('%s/faces' % path).read().strip().split())
-        self.display = VertexObject(
+        self.vbo = VertexObject(
             indices = faces,
             n3f = n3f,
             v3f = v3f,
         )
 
     def draw(self):
-        self.display.draw()
+        self.vbo.draw()
 
 def offsets(min, max, window):
     result = []

@@ -23,6 +23,9 @@ def get(enum, size=1, type=int):
     else:
         return values[:]
 
+def enabled(enum):
+    return glIsEnabled(enum)
+
 class Context(object):
     def __init__(self):
         self.stack = list()
