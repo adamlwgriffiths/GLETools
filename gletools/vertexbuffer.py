@@ -68,7 +68,6 @@ class Buffer(object):
 
     def copy_from(self, texture):
         glReadBuffer(texture.attachment)
-        #glBindBufferARB(GL_PIXEL_PACK_BUFFER, self.id)
         glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, self.id)
         glReadPixels(0, 0, texture.width, texture.height, texture.format, GL_FLOAT, 0)
 
@@ -95,7 +94,6 @@ class VertexObject(object):
             enabler, member_name = enablers[enabler]
             ctype, enum = typemap[type]
             if pbo:
-                #buffer = Buffer(mode, GL_PIXEL_PACK_BUFFER, GL_ARRAY_BUFFER, component_length, enabler, enum, ctype, data)
                 buffer = Buffer(mode, GL_PIXEL_PACK_BUFFER_ARB, GL_ARRAY_BUFFER, component_length, enabler, enum, ctype, data)
             else:
                 buffer = Buffer(mode, GL_ARRAY_BUFFER, GL_ARRAY_BUFFER, component_length, enabler, enum, ctype, data)
