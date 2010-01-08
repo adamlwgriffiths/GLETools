@@ -75,9 +75,10 @@ class VertexObject(object):
     def __init__(self, indices, pbo=False, **buffers):
         self.size = len(indices)
 
-        self._buffers = [
-            Buffer(GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, None, index_pointer, GL_UNSIGNED_INT, c_uint, indices)
-        ]
+        self._buffers = [Buffer(
+            GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER,
+            None, index_pointer, GL_UNSIGNED_INT, c_uint, indices
+        )]
         
         for format, data in buffers.items():
             format = format.split('_')
@@ -99,10 +100,19 @@ class VertexObject(object):
                 buffer = Buffer(mode, GL_ARRAY_BUFFER, GL_ARRAY_BUFFER, component_length, enabler, enum, ctype, data)
             setattr(self, member_name, buffer)
             self._buffers.append(buffer)
-           
-    def draw(self, primitive=GL_TRIANGLES):
+    
+    def __enter__(self):
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
         for buffer in self._buffers:
             buffer.draw_bind()
-        glDrawElements(primitive, self.size, GL_UNSIGNED_INT, 0)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         glPopClientAttrib()
+
+    def draw(self, primitive=GL_TRIANGLES):
+        with self:
+            glDrawElements(primitive, self.size, GL_UNSIGNED_INT, 0)
+
+    def draw_instanced(self, amount, primitive=GL_TRIANGLES):
+        with self:
+            DrawElementsInstanced(primitive, self.size, GL_UNSIGNED_INT, None, amount)
