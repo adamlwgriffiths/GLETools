@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import pyglet
-from util import Mesh, gl_init, ChangeValue, nested, quad
+from util import Mesh, gl_init, ChangeValue, nested, quad, Sun
 from gletools.gl import *
 from gletools import (
     Screen, Projection, Lighting, Color, VertexObject, Texture, Framebuffer,
@@ -14,8 +14,8 @@ class Heightmap(object):
         self.height = height
         self.view = Screen(0, 0, width, height)
 
-        self.vertex_texture = Texture(width, height, GL_RGB)
-        self.normal_texture = Texture(width, height, GL_RGB)
+        self.vertex_texture = Texture(width, height, GL_RGB32F)
+        self.normal_texture = Texture(width, height, GL_RGB32F)
         self.fbo = Framebuffer(
             self.vertex_texture,
             self.normal_texture,
@@ -71,11 +71,12 @@ class Heightmap(object):
         self.vbo.draw(GL_TRIANGLES)
 
 if __name__ == '__main__':
-    window = pyglet.window.Window()
+    window = pyglet.window.Window(fullscreen=True)
     projection = Projection(0, 0, window.width, window.height, near=0.1, far=100)
     angle = ChangeValue()
     texture = Texture.open('images/heightmap.png')
     heightmap = Heightmap(texture.width, texture.height)
+    sun = Sun()
 
     @window.event
     def on_draw():
@@ -83,7 +84,8 @@ if __name__ == '__main__':
         
         heightmap.update_from(texture)
 
-        with nested(projection, Lighting):
+        with nested(projection, Color, sun):
+            glColor3f(0.5, 0.5, 0.5)
             glPushMatrix()
             glTranslatef(0, 0, -1)
             glRotatef(20, 1, 0, 0)
@@ -96,5 +98,9 @@ if __name__ == '__main__':
         heightmap.vertex_texture.draw(148, 10)
         heightmap.normal_texture.draw(286, 10)
 
-    gl_init()
+    gl_init(light=False)
+    if gl_info.have_extension('ARB_color_buffer_float'):
+        glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE)
+        glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE)
+        glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE)
     pyglet.app.run()

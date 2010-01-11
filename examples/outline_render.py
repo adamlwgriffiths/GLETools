@@ -8,6 +8,7 @@ from gletools import (
 )
 from gletools.gl import *
 from util import Mesh, Processor, Kernel, offsets, gl_init
+from gaussian import Gaussian
 
 ### setup ###
 
@@ -33,16 +34,6 @@ average = ShaderProgram(
         1,  1,  1,
         1,  1,  1,
     ]),
-    output_factor = 1.0/9.0,
-    input_factor = 1.0,
-    offsets = offsets(-1, 1, window),
-)
-
-gaussian = ShaderProgram(
-    VertexShader.open('shaders/normal.vert'),
-    FragmentShader.open('shaders/convolution.frag'),
-    kernel_size = 3*3,
-    kernel = Vec(1, Kernel(3).gauss()),
     output_factor = 1.0/9.0,
     input_factor = 1.0,
     offsets = offsets(-1, 1, window),
@@ -92,7 +83,6 @@ def on_draw():
         glPopMatrix()
 
     processor.filter(texture, laplace)
-    processor.filter(texture, gaussian)
     processor.filter(texture, invert)
     processor.blit(texture)
 

@@ -1,20 +1,21 @@
 from __future__ import with_statement
 from math import e, pow, sqrt
-from gletools import Framebuffer, Depthbuffer, Screen, Texture, Vec, VertexObject
+from gletools import Framebuffer, Depthbuffer, Screen, Texture, Vec, VertexObject, ShaderProgram, VertexShader, FragmentShader
 from gletools.gl import *
 from contextlib import nested
 
-def gl_init():
+def gl_init(light=True):
     glEnable(GL_CULL_FACE)
     glEnable(GL_DEPTH_TEST)
-    glEnable(GL_LIGHT0)
     glEnable(GL_COLOR_MATERIAL)
     glShadeModel(GL_SMOOTH)
 
-    glLightfv(GL_LIGHT0, GL_AMBIENT, (GLfloat*4)(0.1, 0.1, 0.1, 0.2))
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, (GLfloat*4)(0.5, 0.5, 0.5, 0.8))
-    glLightfv(GL_LIGHT0, GL_SPECULAR, (GLfloat*4)(0.3, 0.3, 0.3, 0.5))
-    glLightfv(GL_LIGHT0, GL_POSITION, (GLfloat*4)(0, 30, 0, 1))
+    if light:
+        glEnable(GL_LIGHT0)
+        glLightfv(GL_LIGHT0, GL_AMBIENT, (GLfloat*4)(0.1, 0.1, 0.1, 0.2))
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, (GLfloat*4)(0.5, 0.5, 0.5, 0.8))
+        glLightfv(GL_LIGHT0, GL_SPECULAR, (GLfloat*4)(0.3, 0.3, 0.3, 0.5))
+        glLightfv(GL_LIGHT0, GL_POSITION, (GLfloat*4)(0, 30, 0, 1))
 
 def gauss(x, height=1.0, width=1.0, position=0.0):
     return height*pow(e, - pow(x-position, 2) / (2*pow(width*0.308, 2)))
@@ -163,3 +164,15 @@ class ChangeValue(object):
 
     def __float__(self):
         return self.value
+
+    def __mul__(self, other):
+        return float(self) * other
+
+def Sun(color=(1.0, 1.0, 1.0), direction=(0.5,-0.5,0.0), ambient=(0.1, 0.1, 0.1)):
+    return ShaderProgram(
+        VertexShader.open('shaders/sun.vert'),
+        FragmentShader.open('shaders/sun.frag'),
+        color = color,
+        direction = direction,
+        ambient = ambient,
+    )

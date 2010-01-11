@@ -7,7 +7,7 @@
     :license: GNU AGPL v3 or later, see LICENSE for more details.
 """
 from __future__ import with_statement
-from util import quad, nested, ChangeValue, gl_init, Processor
+from util import quad, nested, ChangeValue, gl_init, Processor, Sun
 import random
 
 import pyglet
@@ -19,28 +19,27 @@ from ripples import Ripples
 from r2vb import Heightmap
 from gaussian import Gaussian
 
-if __name__ == '__main__':
+def main():
     angle = ChangeValue()
-    window = pyglet.window.Window(width=786, height=600)
+    window = pyglet.window.Window(width=786, height=600, vsync=False)
     projection = Projection(0, 0, window.width, window.height, near=0.1, far=100)
     width, height = 128, 128
     ripples = Ripples(width, height)
-    height_texture = Texture(width*2, height*2)
+    height_texture = Texture(width*2, height*2, format=GL_RGBA32F)
     processor = Processor(height_texture)
     gaussian = Gaussian(processor)
-    heightmap = Heightmap(width*2, height*2, scale=0.2)
+    heightmap = Heightmap(width*2, height*2, scale=1.2)
+    sun = Sun()
 
     def rain(delta):
         x = random.randint(0, ripples.width)
         y = random.randint(0, ripples.height)
-        size = random.random() * 0.8
+        size = random.random() * 0.5
         with nested(ripples.framebuffer, Color):
-            glBegin(GL_QUADS)
-            glColor4f(size, size, size, 1.0)
-            glVertex3f(x-size, y-size, 0)
-            glVertex3f(x+size, y-size, 0)
-            glVertex3f(x+size, y+size, 0)
-            glVertex3f(x-size, y+size, 0)
+            glPointSize(size)
+            glBegin(GL_POINTS)
+            glColor4f(0.2, 0.2, 0.2, 1.0)
+            glVertex3f(x, y, 0)
             glEnd()
         
     pyglet.clock.schedule_interval(rain, 0.2)
@@ -51,15 +50,15 @@ if __name__ == '__main__':
         window.clear()
         ripples.step()
         processor.copy(ripples.result, height_texture)
-        gaussian.filter(height_texture, 1)
+        gaussian.filter(height_texture, 2)
         heightmap.update_from(height_texture)
         
-        with nested(projection, Lighting, Color):
+        with nested(projection, Color, sun):
             glColor3f(7/256.0, 121/256.0, 208/256.0)
             glPushMatrix()
             glTranslatef(0, 0, -1)
-            glRotatef(20, 1, 0, 0)
-            #glRotatef(angle, 0.0, 1.0, 0.0)
+            glRotatef(10, 1, 0, 0)
+            glRotatef(angle, 0.0, 1.0, 0.0)
             glTranslatef(-0.5, 0, -0.5)
             heightmap.draw()
             glPopMatrix()
@@ -70,9 +69,11 @@ if __name__ == '__main__':
 
     glEnable(GL_POINT_SMOOTH)
     glEnable(GL_LINE_SMOOTH)
-    gl_init()
-    if gl_info.have_extension('ARB_color_buffer_float'):
-        glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE)
-        glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE)
-        glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE)
+    glClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, GL_FALSE)
+    glClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, GL_FALSE)
+    glClampColorARB(GL_CLAMP_READ_COLOR_ARB, GL_FALSE)
+    gl_init(light=False)
     pyglet.app.run()
+
+if __name__ == '__main__':
+    main()

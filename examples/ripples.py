@@ -21,9 +21,9 @@ class Ripples(object):
         self.width = width
         self.height = height
         self.framebuffer = Framebuffer()
-        self.tex1 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F)
-        self.tex2 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F)
-        self.tex3 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F)
+        self.tex1 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F, clamp='st')
+        self.tex2 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F, clamp='st')
+        self.tex3 = Texture(width, height, filter=GL_NEAREST, format=GL_RGBA32F, clamp='st')
 
         self.program = ShaderProgram(
             FragmentShader.open('shaders/ripples.frag'),

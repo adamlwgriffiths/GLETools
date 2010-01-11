@@ -125,8 +125,9 @@ class Texture(Context):
     def _exit(self):
         glPopAttrib()
 
-    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, data=None, mipmap=False):
+    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, data=None, mipmap=False, clamp=False):
         Context.__init__(self)
+        self.clamp = clamp
         self.mipmap = mipmap
         self.width = width
         self.height = height
@@ -203,10 +204,16 @@ class Texture(Context):
                 left=x, top=self.height+y, right=self.width+x, bottom=y, scale=scale
             )
 
-    def set_data(self, data):
+    def set_data(self, data, clamp=False):
         with self:
             glTexParameteri(self.target, GL_TEXTURE_MIN_FILTER, self.filter)
             glTexParameteri(self.target, GL_TEXTURE_MAG_FILTER, self.filter)
+            if clamp:
+                if 's' in clamp:
+                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+                if 't' in clamp:
+                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+
             if self.mipmap:
                 gluBuild2DMipmaps(
                     self.target, 3, self.format,
@@ -235,7 +242,7 @@ class Texture(Context):
             glPopClientAttrib()
 
     def update(self):
-        self.set_data(self.buffer)
+        self.set_data(self.buffer, self.clamp)
 
     def retrieve(self):
         self.get_data(self.buffer)
