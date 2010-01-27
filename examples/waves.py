@@ -41,7 +41,10 @@ def main():
             glColor4f(0.2, 0.2, 0.2, 1.0)
             glVertex3f(x, y, 0)
             glEnd()
-        
+
+
+    fps = pyglet.clock.ClockDisplay()
+
     pyglet.clock.schedule_interval(rain, 0.2)
     pyglet.clock.schedule(lambda delta: None)
 
@@ -63,6 +66,7 @@ def main():
             heightmap.draw()
             glPopMatrix()
 
+        fps.draw()
         ripples.result.draw()
         heightmap.vertex_texture.draw(2*width, 0, scale=0.5)
         heightmap.normal_texture.draw(4*width, 0, scale=0.5)

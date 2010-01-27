@@ -8,10 +8,10 @@ from random import random
 
 if __name__ == '__main__':
     window = pyglet.window.Window(vsync=False)
-    projection = Projection(0, 0, window.width, window.height, near=100, far=500)
+    projection = Projection(0, 0, window.width, window.height, near=100, far=700)
     angle = ChangeValue()
     bunny = Mesh('meshes/bunny')
-    positions = [(random()*100-50, random()*100-50, random()*100-50) for _ in range(100)]
+    positions = [(random()*300-150, random()*300-150, random()*300-150) for _ in range(500)]
 
     fps = pyglet.clock.ClockDisplay()
  
@@ -24,19 +24,13 @@ if __name__ == '__main__':
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
            
             glPushMatrix()
-            glTranslatef(0, 0, -200)
+            glTranslatef(0, 0, -400)
             glRotatef(angle, 0.0, 1.0, 0.0)
             for x, y, z in positions:
                 glPushMatrix()
                 glTranslatef(x, y, z)
                 bunny.vbo.draw(bind=False)
                 glPopMatrix()
-            glPopMatrix()
-
-            glPushMatrix()
-            glTranslatef(-10, 0, -40)
-            glRotatef(angle, 0.0, 1.0, 0.0)
-            bunny.draw()
             glPopMatrix()
 
         fps.draw()

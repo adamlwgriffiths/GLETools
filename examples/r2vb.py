@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import pyglet
-from util import Mesh, gl_init, ChangeValue, nested, quad, Sun
+from util import gl_init, ChangeValue, nested, quad, Sun
 from gletools.gl import *
 from gletools import (
     Screen, Projection, Lighting, Color, VertexObject, Texture, Framebuffer,
@@ -14,8 +14,8 @@ class Heightmap(object):
         self.height = height
         self.view = Screen(0, 0, width, height)
 
-        self.vertex_texture = Texture(width, height, GL_RGB32F)
-        self.normal_texture = Texture(width, height, GL_RGB32F)
+        self.vertex_texture = Texture(width, height, GL_RGBA32F)
+        self.normal_texture = Texture(width, height, GL_RGBA32F)
         self.fbo = Framebuffer(
             self.vertex_texture,
             self.normal_texture,
@@ -30,15 +30,15 @@ class Heightmap(object):
         self.vbo = self.generate_vbo(width, height)
 
     def generate_vbo(self, width, height):
-        v3f = []
+        v4f = []
         for z in range(height):
             for x in range(width):
-                v3f.extend((x/float(width), 0, z/float(height)))
+                v4f.extend((x/float(width), 0, z/float(height), 1))
 
-        n3f = []
+        n4f = []
         for z in range(height):
             for x in range(width):
-                n3f.extend((0, 1, 0))
+                n4f.extend((0, 0, 0, 0))
 
         at = lambda x, y: x+y*width
 
@@ -55,8 +55,8 @@ class Heightmap(object):
         return VertexObject(
             pbo                 = True,
             indices             = indices,
-            dynamic_draw_v3f    = v3f,
-            dynamic_draw_n3f    = n3f,
+            dynamic_draw_v4f    = v4f,
+            dynamic_draw_n4f    = n4f,
         )
  
         pass

@@ -11,15 +11,15 @@ from gletools.gl import *
 from .util import Context, DependencyException, Group, gen_buffers, enabled, get
 from ctypes import c_float, c_int
 
-def vertex_pointer(size, type):
+def vertex_pointer(size, type, stride):
     glEnableClientState(GL_VERTEX_ARRAY)
-    glVertexPointer(size, type, 0, 0)
+    glVertexPointer(size, type, stride, 0)
 
-def normal_pointer(size, type):
+def normal_pointer(size, type, stride):
     glEnableClientState(GL_NORMAL_ARRAY)
-    glNormalPointer(type, 0, 0)
+    glNormalPointer(type, stride, 0)
 
-def index_pointer(size, type):
+def index_pointer(size, type, stride):
     pass
 
 modes = {
@@ -56,6 +56,10 @@ class Buffer(object):
         self.component_length = component_length
         self.enable = enable
         self.type = type
+        if component_length:
+            self.stride = sizeof(ctype)*component_length
+        else:
+            self.stride = None
 
         data = (ctype*len(data))(*data)
         self.id = gen_buffers()
@@ -65,12 +69,12 @@ class Buffer(object):
 
     def draw_bind(self):
         glBindBuffer(self.draw_target, self.id)
-        self.enable(self.component_length, self.type)
+        self.enable(self.component_length, self.type, self.stride)
 
     def copy_from(self, texture):
         glReadBuffer(texture.attachment)
         glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, self.id)
-        glReadPixels(0, 0, texture.width, texture.height, GL_RGB, GL_FLOAT, 0) #GL_RGB might be a cludge
+        glReadPixels(0, 0, texture.width, texture.height, GL_RGBA, GL_FLOAT, 0) #GL_RGB might be a cludge
 
 class VertexObject(object):
     def __init__(self, indices, pbo=False, **buffers):

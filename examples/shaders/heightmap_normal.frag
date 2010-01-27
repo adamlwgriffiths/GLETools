@@ -31,5 +31,5 @@ void main(void){
     ) / 8.0);
     vec2 uv = gl_TexCoord[0].st;
     gl_FragData[0] = vec4(uv.s, height, uv.t, 1.0);
-    gl_FragData[1].rgb = normal;
+    gl_FragData[1] = vec4(normal.x, normal.y, normal.z, 1.0);
 }
