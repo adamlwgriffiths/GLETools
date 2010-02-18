@@ -113,6 +113,9 @@ class Vars(object):
         self.__dict__['_program'] = program
 
     def __setattr__(self, name, value):
+        self[name] = value
+
+    def __setitem__(self, name, value):
         if isinstance(value, Variable):
             value.set(self._program, name)
         elif isinstance(value, (tuple, list)):

@@ -61,7 +61,9 @@ class Buffer(object):
         else:
             self.stride = None
 
-        data = (ctype*len(data))(*data)
+        if not isinstance(data, ctype*len(data)):
+            data = (ctype*len(data))(*data)
+
         self.id = gen_buffers()
         glBindBuffer(self.data_target, self.id)
         glBufferData(self.data_target, sizeof(data), data, mode)
