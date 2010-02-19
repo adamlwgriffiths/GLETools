@@ -105,6 +105,11 @@ typemap = {
         1:glUniform1i,
         2:glUniform2i,
         3:glUniform3i,
+    },
+    bool:{
+        1:glUniform1i,
+        2:glUniform2i,
+        3:glUniform3i,
     }
 }
 
