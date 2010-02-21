@@ -147,6 +147,9 @@ class Texture(Context):
         self.update()
         self.display = self.make_display()
 
+    def delete(self):
+        glDeleteTextures(1, byref(self.id))
+
     @classmethod
     def open(cls, filename, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0):
         if not has_pil:
