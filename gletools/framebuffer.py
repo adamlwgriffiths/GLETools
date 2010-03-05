@@ -25,6 +25,9 @@ class Textures(object):
         return self.textures[i]
 
     def __setitem__(self, i, texture):
+        self.attach(i, texture)
+
+    def attach(self, i, texture, level=0):
         with self.framebuffer:
             attachment = GL_COLOR_ATTACHMENT0_EXT + i
             glFramebufferTexture2DEXT(
@@ -32,7 +35,7 @@ class Textures(object):
                 attachment,
                 texture.target,
                 texture.id,
-                0,
+                level,
             )
             texture.attachment = attachment
             self.textures[i] = texture

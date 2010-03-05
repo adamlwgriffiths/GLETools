@@ -125,7 +125,7 @@ class Texture(Context):
     def _exit(self):
         glPopAttrib()
 
-    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, data=None, mipmap=False, clamp=False):
+    def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, data=None, mipmap=0, clamp=False):
         Context.__init__(self)
         self.clamp = clamp
         self.mipmap = mipmap
@@ -142,10 +142,19 @@ class Texture(Context):
         if data:
             self.buffer = self.buffer_type(*data)
         else:
-            self.buffer = self.buffer_type()
+            self._buffer = None
 
         self.update()
         self.display = self.make_display()
+
+   
+    def get_buffer(self):
+        if not self._buffer:
+            self._buffer = self.buffer_type()
+        return self._buffer
+    def set_buffer(self, data):
+        self._buffer = data
+    buffer = property(get_buffer, set_buffer)
 
     def delete(self):
         glDeleteTextures(1, byref(self.id))
@@ -171,13 +180,14 @@ class Texture(Context):
         return cls(width, height, format=format, filter=filter, unit=unit, data=data)
 
     def save(self, filename):
-        image = Image.new('RGB', (self.width, self.height))
+        self.retrieve()
+        image = Image.new(self.spec.pil, (self.width, self.height))
         if self.spec.type == self.gl_byte:
             image.putdata(self)
         else:
             def convert(pixel):
-                r, g, b = pixel
-                return int(r*255), int(g*255), int(b*255)
+                return map(lambda x: int(x*255), pixel)
+                #return int(r*255), int(g*255), int(b*255)
             data = map(convert, self)
             image.putdata(data)
         image.save(filename)
@@ -207,7 +217,7 @@ class Texture(Context):
                 left=x, top=self.height+y, right=self.width+x, bottom=y, scale=scale
             )
 
-    def set_data(self, data, clamp=False):
+    def set_data(self, data=None, clamp=False, level=0):
         with self:
             glTexParameteri(self.target, GL_TEXTURE_MIN_FILTER, self.filter)
             glTexParameteri(self.target, GL_TEXTURE_MAG_FILTER, self.filter)
@@ -217,20 +227,24 @@ class Texture(Context):
                 if 't' in clamp:
                     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
 
-            if self.mipmap:
-                gluBuild2DMipmaps(
-                    self.target, 3, self.format,
+           
+            if data:
+                glTexImage2D(
+                    self.target, level, self.format,
                     self.width, self.height,
+                    0,
                     self.spec.channels.enum, self.spec.type.enum,
                     data,
                 )
             else:
                 glTexImage2D(
-                    self.target, 0, self.format,
-                    self.width, self.height,
+                    self.target, level, self.format,
+                    self.width/2**level, self.height/2**level,
+                    #self.width, self.height,
+                    #width, height,
                     0,
                     self.spec.channels.enum, self.spec.type.enum,
-                    data,
+                    0,
                 )
 
             glFlush()
@@ -243,9 +257,13 @@ class Texture(Context):
                 buffer,
             )
             glPopClientAttrib()
+            glFinish()
 
     def update(self):
-        self.set_data(self.buffer, self.clamp)
+        if self._buffer:
+            self.set_data(self.buffer, self.clamp)
+        else:
+            self.set_data(clamp=self.clamp)
 
     def retrieve(self):
         self.get_data(self.buffer)

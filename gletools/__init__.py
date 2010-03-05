@@ -8,7 +8,7 @@
 from .framebuffer import Framebuffer
 from .texture import Texture
 from .depthbuffer import Depthbuffer
-from .shader import FragmentShader, VertexShader, ShaderProgram, Sampler2D, Mat4, Vec
+from .shader import FragmentShader, VertexShader, ShaderProgram, Sampler2D, Mat4, UniformArray
 from .util import (
     get, Projection, Screen, Ortho, Viewport, Group, interval, quad, Matrix, DependencyException, DepthTest, SphereMapping,
     Lighting, Color
