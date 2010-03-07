@@ -223,9 +223,9 @@ class Texture(Context):
             glTexParameteri(self.target, GL_TEXTURE_MAG_FILTER, self.filter)
             if clamp:
                 if 's' in clamp:
-                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
                 if 't' in clamp:
-                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+                    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
            
             if data:
