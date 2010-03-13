@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from math import e, pow, sqrt
-from gletools import Framebuffer, Depthbuffer, Screen, Texture, Vec, VertexObject, ShaderProgram, VertexShader, FragmentShader
+from gletools import Framebuffer, Depthbuffer, Screen, Texture, UniformArray, VertexObject, ShaderProgram, VertexShader, FragmentShader
 from gletools.gl import *
 from contextlib import nested
 
@@ -151,7 +151,7 @@ def offsets(min, max, window):
             yoff = float(y)/float(window.height)
             result.append(xoff)
             result.append(yoff)
-    return Vec(2, result)
+    return UniformArray(float, 2, result)
 
 class ChangeValue(object):
     def __init__(self, start=0.0, change=10.0, rate=0.02):

@@ -4,7 +4,7 @@ from contextlib import nested
 import pyglet
 from gletools import (
     ShaderProgram, FragmentShader, VertexShader, Depthbuffer,
-    Texture, Projection, Vec, Lighting, Color
+    Texture, Projection, UniformArray, Lighting, Color
 )
 from gletools.gl import *
 from util import Mesh, Processor, Kernel, offsets, gl_init
@@ -29,7 +29,7 @@ average = ShaderProgram(
     VertexShader.open('shaders/normal.vert'),
     FragmentShader.open('shaders/convolution.frag'),
     kernel_size = 3*3,
-    kernel = Vec(1, [
+    kernel = UniformArray(float, 1, [
         1,  1,  1,
         1,  1,  1,
         1,  1,  1,
@@ -42,7 +42,7 @@ average = ShaderProgram(
 laplace = ShaderProgram(
     FragmentShader.open('shaders/convolution.frag'),
     kernel_size = 3*3,
-    kernel = Vec(1, [
+    kernel = UniformArray(float, 1, [
         -1, -1, -1,
         -1,  8, -1,
         -1, -1, -1,

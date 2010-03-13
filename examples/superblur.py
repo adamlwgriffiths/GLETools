@@ -4,7 +4,7 @@ from contextlib import nested
 import pyglet
 from gletools import (
     ShaderProgram, FragmentShader, VertexShader, Depthbuffer,
-    Texture, Projection, Vec, Lighting, Color
+    Texture, Projection, UniformArray, Lighting, Color
 )
 from gletools.gl import *
 from util import Mesh, Processor, Kernel, offsets, gl_init
