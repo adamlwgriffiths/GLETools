@@ -9,6 +9,7 @@ from __future__ import with_statement
 
 from gletools.gl import *
 from .util import Context, DependencyException, quad
+from ctypes import string_at, sizeof
 
 try:
     import Image
@@ -181,16 +182,12 @@ class Texture(Context):
 
     def save(self, filename):
         self.retrieve()
-        image = Image.new(self.spec.pil, (self.width, self.height))
         if self.spec.type == self.gl_byte:
-            image.putdata(self)
+            source = string_at(self.buffer, sizeof(self.buffer))
+            image = Image.fromstring(self.spec.pil, (self.width, self.height), source)
+            image.save(filename)
         else:
-            def convert(pixel):
-                return map(lambda x: int(x*255), pixel)
-                #return int(r*255), int(g*255), int(b*255)
-            data = map(convert, self)
-            image.putdata(data)
-        image.save(filename)
+            raise Exception('cannot save non byte images')
         
     def make_display(self):
         uvs = 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0
@@ -267,6 +264,7 @@ class Texture(Context):
 
     def retrieve(self):
         self.get_data(self.buffer)
+        glFinish()
 
     def __getitem__(self, (x, y)):
         x, y = x%self.width, y%self.height

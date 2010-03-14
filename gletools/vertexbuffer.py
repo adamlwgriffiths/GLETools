@@ -77,6 +77,7 @@ class Buffer(object):
         glReadBuffer(texture.attachment)
         glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, self.id)
         glReadPixels(0, 0, texture.width, texture.height, GL_RGBA, GL_FLOAT, 0) #GL_RGB might be a cludge
+        glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0)
 
 class VertexObject(object):
     def __init__(self, indices, pbo=False, **buffers):
