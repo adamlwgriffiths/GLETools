@@ -30,9 +30,10 @@ class GLObject(object):
 
 class Shader(GLObject):
     
-    def __init__(self, source):
+    def __init__(self, source, filename='string'):
+        self.filename = filename
         if not gl_info.have_extension(self.ext):
-            raise self.Exception('%s extension is not available' % self.ext)
+            raise self.Exception('file: %s, %s extension is not available' % (filename, self.ext))
         self.id = glCreateShaderObjectARB(self.type)
         self.source = source
         ptr = cast(c_char_p(source), POINTER(c_char))
@@ -44,12 +45,12 @@ class Shader(GLObject):
         glGetObjectParameterivARB(self.id, GL_OBJECT_COMPILE_STATUS_ARB, byref(status))
         if status.value == 0:
             error = self.log()
-            raise self.Exception('failed to compile:\n%s' % error)
+            raise self.Exception('file: %s, failed to compile: \n%s' % (filename, error))
     
     @classmethod
     def open(cls, name):
         source = open(name).read()
-        return cls(source)
+        return cls(source, name)
 
 class VertexShader(Shader):
     type = GL_VERTEX_SHADER_ARB
