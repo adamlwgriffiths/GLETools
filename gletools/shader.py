@@ -48,9 +48,11 @@ class Shader(GLObject):
             raise self.Exception('file: %s, failed to compile: \n%s' % (filename, error))
     
     @classmethod
-    def open(cls, name):
-        source = open(name).read()
-        return cls(source, name)
+    def open(cls, file):
+        if isinstance(file, basestring):
+            file = open(file)
+        source = file.read()
+        return cls(source, file.name)
 
 class VertexShader(Shader):
     type = GL_VERTEX_SHADER_ARB
