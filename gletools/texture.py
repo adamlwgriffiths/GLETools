@@ -223,7 +223,6 @@ class Texture(Context):
                     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
                 if 't' in clamp:
                     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-
            
             if data:
                 glTexImage2D(
@@ -296,3 +295,84 @@ class Texture(Context):
         else:
             for i in range(0, len(self.buffer), channels):
                 yield self.buffer[i:i+channels]
+
+class CubeMap(Context):
+    '''
+        Assumes a texturelayout of all 6 faces as a single row of:
+        right = +x, back = -z, left = -x, front = +z, bottom = -y, top = +y
+    '''
+
+    _get = GL_TEXTURE_BINDING_CUBE_MAP 
+    target = GL_TEXTURE_CUBE_MAP
+    unit = GL_TEXTURE0
+
+    def __init__(self, width, height, data):
+        Context.__init__(self)
+        id = self.id = GLuint()
+        glGenTextures(1, byref(id))
+        self.width = width
+        self.height = height
+
+        with self:
+            glTexParameteri(self.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(self.target, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+            right = GL_TEXTURE_CUBE_MAP_POSITIVE_X
+            left = GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+            top = GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+            bottom = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+            front = GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+            back = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+            face_size = (self.height**2) * 4
+
+            self.set_data(right, data, 0)
+            self.set_data(back, data, 1)
+            self.set_data(left, data, 2)
+            self.set_data(front, data, 3)
+            self.set_data(bottom, data, 4)
+            self.set_data(top, data, 5)
+    
+    def set_data(self, target, data, index):
+        glTexImage2D(
+            target, 0, GL_RGBA,
+            self.height, self.height,
+            0,
+            GL_RGBA, GL_UNSIGNED_BYTE,
+            self.face_data(data, index),
+        )
+    
+    def face_data(self, data, index):
+        result = ''
+        face_pitch = self.height*4
+        full_pitch = self.width*4
+
+        for y in range(self.height):
+            offset = y*full_pitch
+            start = offset + index*face_pitch
+            end = start + face_pitch
+            result += data[start:end]
+
+        return result
+    
+    def bind(self, id):
+        glBindTexture(self.target, id)
+
+    def _enter(self):
+        glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT)
+        glActiveTexture(self.unit)
+        glEnable(self.target)
+
+    def _exit(self):
+        glPopAttrib()
+
+    @classmethod
+    def open(cls, filename):
+        if not has_pil:
+            raise DependencyException('PIL is requried to open image files')
+
+        image = Image.open(filename)
+        image = image.convert('RGBA')
+        width, height = image.size
+        data = image.tostring()
+        
+        return cls(width, height, data)

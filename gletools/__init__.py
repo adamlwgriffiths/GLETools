@@ -6,7 +6,7 @@
 """
 
 from .framebuffer import Framebuffer
-from .texture import Texture
+from .texture import Texture, CubeMap
 from .depthbuffer import Depthbuffer
 from .shader import FragmentShader, VertexShader, ShaderProgram, Sampler2D, Mat4, UniformArray
 from .util import (
