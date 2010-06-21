@@ -19,7 +19,7 @@ vec3 get_normal(float height, float xoff, float yoff){
 
 void main(void){
     float height = get(0.0, 0.0);
-    vec3 normal = normalize((
+    vec3 normal = vec3(normalize((
         get_normal(height,  1.0, -1.0) +
         get_normal(height,  1.0,  0.0) +
         get_normal(height,  1.0,  1.0) +
@@ -28,7 +28,7 @@ void main(void){
         get_normal(height, -1.0, -1.0) +
         get_normal(height, -1.0,  0.0) +
         get_normal(height, -1.0,  1.0)
-    ) / 8.0);
+    ) / 8.0));
     vec2 uv = gl_TexCoord[0].st;
     gl_FragData[0] = vec4(uv.s, height, uv.t, 1.0);
     gl_FragData[1] = vec4(normal.x, normal.y, normal.z, 1.0);
