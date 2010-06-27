@@ -119,8 +119,6 @@ class Texture(Context):
         GL_RGBA32F,
         GL_RGB32F,
         GL_LUMINANCE32F,
-        GL_RGBA16F,
-        GL_RGB16F,
     ]
 
     def bind(self, id):
