@@ -8,7 +8,7 @@
 from __future__ import with_statement
 
 from gletools.gl import *
-from .util import Context, DependencyException, quad
+from .util import Context, DependencyException, quad, ExtensionMissing
 from ctypes import string_at, sizeof
 
 try:
@@ -115,6 +115,14 @@ class Texture(Context):
     
     _get = GL_TEXTURE_BINDING_2D
 
+    float_targets = [
+        GL_RGBA32F,
+        GL_RGB32F,
+        GL_LUMINANCE32F,
+        GL_RGBA16F,
+        GL_RGB16F,
+    ]
+
     def bind(self, id):
         glBindTexture(self.target, id)
 
@@ -127,6 +135,10 @@ class Texture(Context):
         glPopAttrib()
 
     def __init__(self, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, data=None, mipmap=0, clamp=False):
+        if format in self.float_targets:
+            if not gl_info.have_extension('GL_ARB_texture_float'):
+                raise ExtensionMissing('no floating point texture support (GL_ARB_texture_float)')
+
         Context.__init__(self)
         self.clamp = clamp
         self.mipmap = mipmap

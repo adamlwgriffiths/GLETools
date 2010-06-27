@@ -214,6 +214,7 @@ def quad(left=-0.5, top=-0.5, right=0.5, bottom=0.5, scale=1.0):
     glEnd()
 
 class DependencyException(Exception): pass
+class ExtensionMissing(Exception): pass
 
 def gen_buffers(amount=1):
     ids = (c_uint*amount)()
