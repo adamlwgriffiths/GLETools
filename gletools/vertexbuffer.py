@@ -126,4 +126,4 @@ class VertexObject(object):
 
     def draw_instanced(self, amount, primitive=GL_TRIANGLES):
         with self:
-            DrawElementsInstanced(primitive, self.size, GL_UNSIGNED_INT, None, amount)
+            glDrawElementsInstancedEXT(primitive, self.size, GL_UNSIGNED_INT, None, amount)
