@@ -19,11 +19,14 @@ framebuffer.textures = [
 ]
 framebuffer.depth = Depthbuffer(window.width, window.height)
 
+picture = Texture.open('texture.png')
+
 depth_shader = VertexShader('''
     varying float depth;
     void main()
     {
         depth = -(gl_ModelViewMatrix * gl_Vertex).z;
+        gl_TexCoord[0] = gl_MultiTexCoord0;
         gl_Position = ftransform();
         gl_FrontColor = gl_Color;
     }
@@ -43,9 +46,11 @@ depth = ShaderProgram(
     depth_shader,
     FragmentShader('''
         varying float depth;
+        uniform sampler2D texture;
         void main(){
-            gl_FragData[0] = gl_Color;
-            gl_FragData[1] = gl_Color;
+            vec4 color = texture2D(texture, gl_TexCoord[0].st);
+            gl_FragData[0] = color;
+            gl_FragData[1] = color;
             gl_FragData[2] = vec4(depth, depth, depth, 1.0);
         }
     '''),
@@ -90,9 +95,9 @@ def on_draw():
         glRotatef(rotation, 0.0, 0.0, 1.0)
 
         framebuffer.drawto = GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT
-        with nested(framebuffer, depth):
+        with nested(framebuffer, depth, picture):
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            glColor3f(0.0, 1.0, 0.0)
+            glColor3f(1.0, 1.0, 1.0)
             quad(left=-1, right=1, top=1, bottom=-1)
 
         framebuffer.drawto = [GL_COLOR_ATTACHMENT1_EXT]

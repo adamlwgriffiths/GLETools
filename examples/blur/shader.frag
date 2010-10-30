@@ -15,7 +15,7 @@ void main(){
             result += color;
         }
     }
-    gl_FragColor = result/(size*size);
+    gl_FragColor = vec4(0.2) + result/(size*size) * 0.6;
     gl_FragColor.w = 1;
 
 }
