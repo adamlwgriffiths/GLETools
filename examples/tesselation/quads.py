@@ -1,16 +1,13 @@
 import pyglet
-from gletools import (
-    ShaderProgram, TessControlShader, TessEvalShader, GeometryShader, VertexShader, FragmentShader,
-    Texture, Framebuffer, Projection, VertexObject, Matrix
-)
+from pyglet.gl import *
 
-from gletools.gl import *
+from gletools import ShaderProgram, VertexObject, Matrix
 
 window = pyglet.window.Window()
 rotation = 0.0
 
 vbo = VertexObject(
-    indices = [0, 1, 2, 0, 2, 3],
+    indices = [0, 1, 2, 3],
     v4f     = [
         +1, +1, 0, 1,
         +1, -1, 0, 1,
@@ -19,12 +16,11 @@ vbo = VertexObject(
     ],
 )
 
-program = ShaderProgram.open('tesselation.shader',
-    inner_level = 8.0,
-    outer_level = 8.0,
+program = ShaderProgram.open('quads.shader',
+    inner_level = 4.0,
+    outer_level = 4.0,
+    simple      = False,
 )
-
-#program = ShaderProgram.open('test.shader')
 
 def simulate(delta, _):
     global rotation
@@ -41,8 +37,8 @@ def on_draw():
     program.vars.projection = Matrix.perspective(window.width, window.height, 60, 0.1, 100.0)
 
     with program:
+        glPatchParameteri(GL_PATCH_VERTICES, 4);
         vbo.draw(GL_PATCHES)
-        #vbo.draw(GL_TRIANGLES)
 
 if __name__ == '__main__':
     pyglet.app.run()
