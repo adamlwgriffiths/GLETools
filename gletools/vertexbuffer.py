@@ -9,7 +9,7 @@ from __future__ import with_statement
 
 from gletools.gl import *
 from .util import Context, DependencyException, Group, gen_buffers, enabled, get
-from ctypes import c_float, c_int
+from ctypes import c_float, c_int, c_uint, sizeof
 
 def vertex_pointer(size, type, stride):
     glEnableClientState(GL_VERTEX_ARRAY)

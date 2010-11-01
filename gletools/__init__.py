@@ -8,9 +8,10 @@
 from .framebuffer import Framebuffer
 from .texture import Texture, CubeMap
 from .depthbuffer import Depthbuffer
-from .shader import FragmentShader, VertexShader, ShaderProgram, Sampler2D, Mat4, UniformArray
+from .shader import FragmentShader, VertexShader, ShaderProgram, Sampler2D, Mat4, UniformArray, TessControlShader, TessEvalShader, GeometryShader
 from .util import (
-    get, Projection, Screen, Ortho, Viewport, Group, interval, quad, Matrix, DependencyException, DepthTest, SphereMapping,
+    get, Projection, Screen, Ortho, Viewport, Group, interval, quad, DependencyException, DepthTest, SphereMapping,
     Lighting, Color
 )
+from .matrix import Matrix
 from .vertexbuffer import VertexObject

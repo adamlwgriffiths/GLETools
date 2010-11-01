@@ -9,7 +9,7 @@ from __future__ import with_statement
 
 from gletools.gl import *
 from .util import Context, DependencyException, quad, ExtensionMissing
-from ctypes import string_at, sizeof
+from ctypes import string_at, sizeof, byref
 
 try:
     import Image

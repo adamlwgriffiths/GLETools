@@ -17,5 +17,4 @@ void main(){
     }
     gl_FragColor = vec4(0.2) + result/(size*size) * 0.6;
     gl_FragColor.w = 1;
-
 }

@@ -7,12 +7,15 @@
 
 from __future__ import with_statement
 
-from ctypes import c_char_p, pointer, cast, byref, c_char, create_string_buffer, c_float
+from ctypes import c_char_p, pointer, cast, byref, c_char, create_string_buffer, c_float, c_int, POINTER
 
 from gletools.gl import *
+from pyglet.gl.glext_arb import *
 from .util import Context
 
-__all__ = 'VertexShader', 'FragmentShader', 'ShaderProgram'
+import re
+
+__all__ = 'VertexShader', 'FragmentShader', 'ShaderProgram', 'TessControlShader', 'TessEvalShader', 'GeometryShader'
 
 class GLObject(object):
     _del = glDeleteObjectARB
@@ -45,7 +48,7 @@ class Shader(GLObject):
         glGetObjectParameterivARB(self.id, GL_OBJECT_COMPILE_STATUS_ARB, byref(status))
         if status.value == 0:
             error = self.log()
-            raise self.Exception('file: %s, failed to compile: \n%s' % (filename, error))
+            raise self.Exception('%s file: %s, failed to compile: \n%s' % (self.__class__.__name__, filename, error))
     
     @classmethod
     def open(cls, file):
@@ -61,6 +64,18 @@ class VertexShader(Shader):
 class FragmentShader(Shader):
     type = GL_FRAGMENT_SHADER_ARB
     ext = 'GL_ARB_fragment_program'
+
+class TessControlShader(Shader):
+    type = GL_TESS_CONTROL_SHADER
+    ext = 'GL_ARB_tessellation_shader'
+
+class TessEvalShader(Shader):
+    type = GL_TESS_EVALUATION_SHADER
+    ext = 'GL_ARB_tessellation_shader'
+
+class GeometryShader(Shader):
+    type = GL_GEOMETRY_SHADER
+    ext = 'GL_ARB_geometry_shader4'
 
 class Variable(object):
     def set(self, program, name):
@@ -81,7 +96,7 @@ class Mat4(Variable):
         self.values = (c_float*16)(*values)
 
     def do_set(self, location):
-        glUniformMatrix4fv(location, len(self.values), GL_FALSE, self.values)
+        glUniformMatrix4fv(location, 1, GL_FALSE, self.values)
 
 class UniformArray(Variable):
     typemap = {
@@ -192,3 +207,44 @@ class ShaderProgram(GLObject, Context):
     
     def uniform_location(self, name):
         return glGetUniformLocation(self.id, name)
+
+    @classmethod
+    def open(cls, name, **variables):
+        lines = open(name).read().split('\n')
+        shaders = []
+        shader = None
+        sourcelines = []
+        version = ''
+        types = {
+            'vertex'    : VertexShader,
+            'control'   : TessControlShader,
+            'eval'      : TessEvalShader,
+            'geometry'  : GeometryShader,
+            'fragment'  : FragmentShader,
+        }
+        matcher = re.compile('(vertex|control|eval|geometry|fragment):')
+
+        for line in lines:
+            match = matcher.search(line)
+            if line.startswith('#version'):
+                version = line
+            elif match:
+                if shader:
+                    source = '\n'.join(sourcelines)
+                    shaders.append(shader(source, name))
+
+                if 'off' in line:
+                    shader = None
+                else:
+                    typename = match.group(1)
+                    shader = types[typename]
+
+                sourcelines = [version]
+            else:
+                sourcelines.append(line)
+                
+        if shader:
+            source = '\n'.join(sourcelines)
+            shaders.append(shader(source, name))
+
+        return cls(*shaders, **variables)

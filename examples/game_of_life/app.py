@@ -11,7 +11,7 @@ from gletools.gl import *
 
 from lif_parser import LifParser
 
-window = pyglet.window.Window(fullscreen=True)
+window = pyglet.window.Window(fullscreen=True, vsync=False)
 
 framebuffer = Framebuffer()
 front = Texture(window.width, window.height, format=GL_RGB, filter=GL_NEAREST)
