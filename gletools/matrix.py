@@ -7,7 +7,7 @@ from pyglet.gl.glext_arb import *
 
 from ctypes import c_float
 
-__all__ = 'Matrix'
+__all__ = 'Matrix', 'Vector'
 
 class Vector(object):
     def __init__(self, x=0.0, y=0.0, z=0.0, w=1.0):
@@ -27,6 +27,17 @@ class Vector(object):
             self.y * other.y +
             self.z * other.z +
             self.w * other.w
+        )
+
+    def __div__(self, scalar):
+        return Vector(self.x/scalar, self.y/scalar, self.z/scalar, self.w/scalar)
+
+    def matrix_multiply(self, matrix):
+        return Vector(
+            self * matrix.row(0),
+            self * matrix.row(1),
+            self * matrix.row(2),
+            self * matrix.row(3),
         )
 
 class Matrix(Variable):
@@ -77,8 +88,11 @@ class Matrix(Variable):
 
 
     def __mul__(self, other):
-        row0, row1, row2, row3 = self.row(0), self.row(1), self.row(2), self.row(3)
-        col0, col1, col2, col3 = other.row(0), other.row(1), other.row(2), other.row(3)
+        return other.matrix_multiply(self)
+
+    def matrix_multiply(self, other):
+        row0, row1, row2, row3 = other.row(0), other.row(1), other.row(2), other.row(3)
+        col0, col1, col2, col3 = self.row(0), self.row(1), self.row(2), self.row(3)
 
         return Matrix(
             row0*col0, row0*col1, row0*col2, row0*col3,
@@ -133,7 +147,8 @@ class Matrix(Variable):
             col3.x, col3.y, col3.z, col3.w,
         )
 
-    #from the gluPerspective manpage
+    '''
+    #from the gluPerspective manpage, works, but the math is broken if not used trough opengl
     @classmethod
     def perspective(cls, width, height, fov, near, far):
         assert near > 0.0 and near < far
@@ -149,10 +164,10 @@ class Matrix(Variable):
             0.0,        0.0, (2.0*far*near) / (near-far),   0.0,
         )
 
-    '''
-    #alternative from http://www.opengl.org/wiki/GluPerspective_code
+    #alternative from http://www.opengl.org/wiki/GluPerspective_code, it's better but the math is still borked
     @classmethod
-    def perspective(cls, fov, aspect, near, far):
+    def perspective(cls, width, height, fov, near, far):
+        aspect = float(width)/float(height)
         y = near * tan((fov*pi)/360.0)
         x = y * aspect
 
@@ -168,6 +183,25 @@ class Matrix(Variable):
             0.0,                        0.0,                        (-2.0*far)/(far-near),  0.0,
         )
     '''
+
+    #the opengl redbook, somebody *has* to get this right sooner or later
+    @classmethod
+    def perspective(cls, width, height, fov, n, f):
+        aspect = float(width)/float(height)
+        y = n * tan((fov*pi)/360.0)
+        x = y * aspect
+        
+        l = -x
+        r = x
+        t = y
+        b = -y
+        
+        return cls(
+            (2.0*n)/(r-l),  0.0,            (r+l)/(r-l),    0.0,
+            0.0,            (2.0*n)/(t-b),  (t+b)/(t-b),    0.0,
+            0.0,            0.0,            -(f+n)/(f-n),   (-2.0*f*n)/(f-n),
+            0.0,            0.0,            -1.0,           0.0,
+        ).transpose()
 
     def do_set(self, location):
         glUniformMatrix4fv(location, 1, GL_FALSE, self.values)

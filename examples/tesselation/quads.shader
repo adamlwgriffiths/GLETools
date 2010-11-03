@@ -3,9 +3,6 @@
 vertex:
     in vec4 position;
     
-    uniform mat4 projection;
-    uniform mat4 modelview;
-
     void main(void){
         gl_Position = position;
     }
@@ -14,6 +11,7 @@ control:
     layout(vertices = 4) out;
     uniform float inner_level;
     uniform float outer_level;
+    #define id gl_InvocationID
 
     void main(){
         gl_TessLevelInner[0] = inner_level;
@@ -22,7 +20,8 @@ control:
         gl_TessLevelOuter[1] = outer_level;
         gl_TessLevelOuter[2] = outer_level;
         gl_TessLevelOuter[3] = outer_level;
-        gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+
+        gl_out[id].gl_Position = gl_in[id].gl_Position;
     }
 
 eval:
