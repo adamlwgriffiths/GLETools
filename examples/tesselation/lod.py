@@ -57,7 +57,7 @@ def on_draw():
     window.clear()
 
     program = lod
-    program.vars.modelview = Matrix().rotatez(rotation).rotatex(-0.14).translate(0,0,-zoom)
+    program.vars.modelview = Matrix().translate(0,0,-zoom).rotatex(-0.14).rotatez(rotation)
     program.vars.projection = Matrix.perspective(window.width, window.height, 60, 0.1, 200.0)
     program.vars.screen_size = float(window.width), float(window.height)
 

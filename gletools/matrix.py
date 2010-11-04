@@ -21,6 +21,22 @@ class Vector(object):
             self.x, self.y, self.z, self.w
         )
 
+    def scale(self, scalar):
+        return Vector(
+            self.x * scalar,
+            self.y * scalar,
+            self.z * scalar,
+            1.0,
+        )
+
+    def __add__(self, other):
+        return Vector(
+            self.x + other.x,
+            self.y + other.y,
+            self.z + other.z,
+            1.0,
+        )
+
     def __mul__(self, other):
         return (
             self.x * other.x +
@@ -34,10 +50,10 @@ class Vector(object):
 
     def matrix_multiply(self, matrix):
         return Vector(
-            self * matrix.row(0),
-            self * matrix.row(1),
-            self * matrix.row(2),
-            self * matrix.row(3),
+            self * matrix.col(0),
+            self * matrix.col(1),
+            self * matrix.col(2),
+            self * matrix.col(3),
         )
 
 class Matrix(Variable):
@@ -91,8 +107,8 @@ class Matrix(Variable):
         return other.matrix_multiply(self)
 
     def matrix_multiply(self, other):
+        col0, col1, col2, col3 = self.col(0), self.col(1), self.col(2), self.col(3)
         row0, row1, row2, row3 = other.row(0), other.row(1), other.row(2), other.row(3)
-        col0, col1, col2, col3 = self.row(0), self.row(1), self.row(2), self.row(3)
 
         return Matrix(
             row0*col0, row0*col1, row0*col2, row0*col3,
@@ -201,10 +217,10 @@ class Matrix(Variable):
             0.0,            (2.0*n)/(t-b),  (t+b)/(t-b),    0.0,
             0.0,            0.0,            -(f+n)/(f-n),   (-2.0*f*n)/(f-n),
             0.0,            0.0,            -1.0,           0.0,
-        ).transpose()
+        )
 
     def do_set(self, location):
-        glUniformMatrix4fv(location, 1, GL_FALSE, self.values)
+        glUniformMatrix4fv(location, 1, GL_TRUE, self.values)
 
 if __name__ == '__main__':
     matrix1 = Matrix()

@@ -9,7 +9,7 @@ from __future__ import with_statement
 
 from gletools.gl import *
 from .util import Context, DependencyException, quad, ExtensionMissing
-from ctypes import string_at, sizeof, byref
+from ctypes import string_at, sizeof, byref, c_char_p, cast, c_void_p, POINTER, memmove
 
 try:
     import Image
@@ -151,13 +151,20 @@ class Texture(Context):
 
         glGenTextures(1, byref(id))
         if data:
-            self.buffer = self.buffer_type(*data)
+            if isinstance(data, str):
+                pointer = cast(c_char_p(data), c_void_p)
+                source = self.buffer_type.from_address(pointer.value)
+                target = self.buffer_type()
+                memmove(target, source, sizeof(source))
+                self.buffer = target
+            else:
+                self.buffer = self.buffer_type(*data)
+
         else:
             self._buffer = None
 
         self.update()
         self.display = self.make_display()
-
    
     def get_buffer(self):
         if not self._buffer:
@@ -171,7 +178,7 @@ class Texture(Context):
         glDeleteTextures(1, byref(self.id))
 
     @classmethod
-    def open(cls, filename, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0):
+    def open(cls, filename, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, mipmap=0):
         if not has_pil:
             raise DependencyException('PIL is requried to open image files')
         spec = cls.specs[format]
@@ -188,7 +195,13 @@ class Texture(Context):
         else:
             data = map(ord, data)
         
-        return cls(width, height, format=format, filter=filter, unit=unit, data=data)
+        return cls(width, height, format=format, filter=filter, unit=unit, data=data, mipmap=mipmap)
+
+    @classmethod
+    def raw_open(cls, filename, width, height, format=GL_RGBA, filter=GL_LINEAR, unit=GL_TEXTURE0, mipmap=0, clamp=False):
+        data = open(filename, 'rb').read()
+        self = cls(width, height, data=data, format=format, filter=filter, unit=unit, mipmap=mipmap, clamp=clamp) 
+        return self
 
     def save(self, filename):
         self.retrieve()
@@ -200,6 +213,7 @@ class Texture(Context):
             raise Exception('cannot save non byte images')
         
     def make_display(self):
+        import pyglet
         uvs = 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0
         x1 = 0.0
         y1 = 0.0
@@ -226,8 +240,15 @@ class Texture(Context):
 
     def set_data(self, data=None, clamp=False, level=0):
         with self:
-            glTexParameteri(self.target, GL_TEXTURE_MIN_FILTER, self.filter)
-            glTexParameteri(self.target, GL_TEXTURE_MAG_FILTER, self.filter)
+            if isinstance(self.filter, tuple):
+                min_filter, mag_filter = self.filter
+            else:
+                min_filter = self.filter
+                mag_filter = GL_LINEAR
+
+            glTexParameteri(self.target, GL_TEXTURE_MIN_FILTER, min_filter)
+            glTexParameteri(self.target, GL_TEXTURE_MAG_FILTER, mag_filter)
+
             if clamp:
                 if 's' in clamp:
                     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
@@ -235,13 +256,22 @@ class Texture(Context):
                     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
            
             if data:
-                glTexImage2D(
-                    self.target, level, self.format,
-                    self.width, self.height,
-                    0,
-                    self.spec.channels.enum, self.spec.type.enum,
-                    data,
-                )
+                if self.mipmap:
+                    gluBuild2DMipmaps(
+                        self.target, self.mipmap,
+                        self.width, self.height,
+                        self.spec.channels.enum,
+                        self.spec.type.enum,
+                        data,
+                    )
+                else:
+                    glTexImage2D(
+                        self.target, level, self.format,
+                        self.width, self.height,
+                        0,
+                        self.spec.channels.enum, self.spec.type.enum,
+                        data,
+                    )
             else:
                 glTexImage2D(
                     self.target, level, self.format,

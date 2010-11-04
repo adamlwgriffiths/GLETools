@@ -32,7 +32,7 @@ def on_draw():
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
     window.clear()
 
-    program.vars.modelview = Matrix().rotatez(rotation).rotatex(-0.175).translate(0,0,-3)
+    program.vars.modelview = Matrix().translate(0,0,-3).rotatex(-0.175).rotatez(rotation)
     program.vars.projection = Matrix.perspective(window.width, window.height, 60, 0.1, 100.0)
 
     with program:

@@ -51,7 +51,8 @@ pyglet.clock.schedule(simulate, 0.03)
 @window.event
 def on_draw():
     window.clear()
-    program.vars.seed_vector = [random() for _ in xrange(3)]
+    #program.vars.seed_vector = [random() for _ in xrange(3)]
+    program.vars.seed_vector = [0.5 for _ in xrange(3)]
     with nested(framebuffer, program, screen):
         quad(0.0, texture.width)
   

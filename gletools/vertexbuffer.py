@@ -127,3 +127,43 @@ class VertexObject(object):
     def draw_instanced(self, amount, primitive=GL_TRIANGLES):
         with self:
             glDrawElementsInstancedEXT(primitive, self.size, GL_UNSIGNED_INT, None, amount)
+
+'''
+class Buffer4(object):
+    def __init__(self, size, data):
+        if not isinstance(data, ctype*len(data)):
+            data = (c_float*len(data))(*data)
+
+        self.id = gen_buffers()
+        self.size = size
+        glBindBuffer(GL_ARRAY_BUFFER, self.id);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    def bind(self):
+        glBindBuffer(GL_ARRAY_BUFFER, self.id)
+        glVertexAttribPointer(name, self.size, GL_FLOAT, GL_FALSE, 0, 0)
+
+class VertexObject4(object):
+    def __init__(self, indices, **attribs):
+        self.id = gen_buffers()
+        self.size = len(indices)
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.id)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), data, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+
+        for attrib, data in attribs.items():
+
+    def draw(self, primitive=GL_TRIANGLES):
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT | GL_CLIENT_PIXEL_STORE_BIT)
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.id)
+        for buffer in self.buffers:
+            buffer.bind()
+        glDrawElements(primitive, self.size, GL_UNSIGNED_INT, 0)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        
+        glPopClientAttrib()
+'''
