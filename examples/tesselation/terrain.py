@@ -3,10 +3,11 @@ from ctypes import c_float, c_uint
 import math
 
 import pyglet
-from pyglet.window import key
 from pyglet.gl import *
 
 from gletools import ShaderProgram, VertexObject, Matrix, Vector, Texture, Sampler2D, DepthTest
+
+from util import View
 
 def make_plane(width, height):
     v4f = (c_float*(width*height*4))()
@@ -32,47 +33,6 @@ def make_plane(width, height):
         v4f     = v4f,
     )
 
-class View(object):
-    def __init__(self, window):
-        window.set_exclusive_mouse()
-        self.rotation = Vector()
-        self.rotspeed = Vector()
-        self.position = Vector(0, 0, -1)
-        self.speed = Vector()
-        self.keys = key.KeyStateHandler()
-        window.push_handlers(self.keys, self.on_mouse_motion)
-
-    def on_mouse_motion(self, x, y, dx, dy):
-        self.rotspeed += Vector(dx*0.1, -dy*0.1, 0.0, 1.0)
-
-    def update(self, delta):
-        delta *= 0.03
-        self.rotation += self.rotspeed.scale(delta);
-        self.rotspeed = self.rotspeed.scale(0.95)
-        self.position += self.speed.scale(delta)
-        self.speed = self.speed.scale(0.99)
-
-        rotmatrix = Matrix().rotatex(self.rotation.y).rotatey(self.rotation.x)
-        front =  rotmatrix * Vector(0.0, 0.0, 1.0, 1.0)
-        right =  rotmatrix * Vector(1.0, 0.0, 0.0, 1.0)
-        up =  rotmatrix * Vector(0.0, 1.0, 0.0, 1.0)
-
-        factor = 0.05
-        if self.keys[key.W]:
-            self.speed += front.scale(factor);
-        if self.keys[key.S]:
-            self.speed += front.scale(-factor);
-        if self.keys[key.D]:
-            self.speed += right.scale(-factor);
-        if self.keys[key.A]:
-            self.speed += right.scale(factor);
-        if self.keys[key.Q]:
-            self.speed += up.scale(factor);
-        if self.keys[key.E]:
-            self.speed += up.scale(-factor);
-
-        self.matrix = rotmatrix * Matrix().translate(self.position.x,self.position.y,self.position.z)
-
 rotation = 0.0
 zoom = 1.0
 def simulate(delta, _):
@@ -94,9 +54,14 @@ terrain = Texture.raw_open('data/mountains.terrain', 2048, 2048, format=GL_RGBA3
 program = ShaderProgram.open('terrain.shader',
     diffuse = Sampler2D(GL_TEXTURE0),
     terrain = Sampler2D(GL_TEXTURE1),
+    lod_factor = 4.0,
 )
 
-vbo = make_plane(70, 70)
+test = ShaderProgram.open('test.shader',
+    terrain = Sampler2D(GL_TEXTURE1),
+)
+
+vbo = make_plane(64, 64)
 fps = pyglet.clock.ClockDisplay(color=(1,0,0,0.5))
 
 @window.event
@@ -104,18 +69,33 @@ def on_draw():
     window.clear()
 
     model = Matrix().rotatex(-0.25).translate(-0.5, -0.5, 0.0)
-    program.vars.modelview = view.matrix * model
-    program.vars.projection = Matrix.perspective(window.width, window.height, 60, 0.001, 100.0)
+    projection = Matrix.perspective(window.width, window.height, 60, 0.0001, 100.0)
+    modelview = view.matrix * model
+
+    program.vars.modelview = modelview
+    program.vars.projection = projection
     program.vars.screen_size = float(window.width), float(window.height)
 
+    glEnable(GL_CULL_FACE)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     with nested(DepthTest, diffuse, terrain, program):
         glPatchParameteri(GL_PATCH_VERTICES, 4);
         vbo.draw(GL_PATCHES)
     
+    test.vars.modelview = modelview
+    test.vars.projection = projection
+   
+    '''
+    glDisable(GL_CULL_FACE)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+    with nested(DepthTest, terrain, test):
+        vbo.draw(GL_QUADS)
+    '''
+    
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
     fps.draw()
 
 if __name__ == '__main__':
-    glEnable(GL_CULL_FACE)
     glCullFace(GL_BACK)
     glClearColor(1,1,1,1)
     pyglet.app.run()
