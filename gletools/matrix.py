@@ -21,7 +21,7 @@ class Vector(object):
             self.x, self.y, self.z, self.w
         )
 
-    def scale(self, scalar):
+    def __mul__(self, scalar):
         return Vector(
             self.x * scalar,
             self.y * scalar,
@@ -36,8 +36,16 @@ class Vector(object):
             self.z + other.z,
             1.0,
         )
+    
+    def __sub__(self, other):
+        return Vector(
+            self.x - other.x,
+            self.y - other.y,
+            self.z - other.z,
+            1.0,
+        )
 
-    def __mul__(self, other):
+    def __call__(self, other):
         return (
             self.x * other.x +
             self.y * other.y +
@@ -50,10 +58,10 @@ class Vector(object):
 
     def matrix_multiply(self, matrix):
         return Vector(
-            self * matrix.col(0),
-            self * matrix.col(1),
-            self * matrix.col(2),
-            self * matrix.col(3),
+            self(matrix.col(0)),
+            self(matrix.col(1)),
+            self(matrix.col(2)),
+            self(matrix.col(3)),
         )
 
 class Matrix(Variable):
@@ -111,10 +119,10 @@ class Matrix(Variable):
         row0, row1, row2, row3 = other.row(0), other.row(1), other.row(2), other.row(3)
 
         return Matrix(
-            row0*col0, row0*col1, row0*col2, row0*col3,
-            row1*col0, row1*col1, row1*col2, row1*col3,
-            row2*col0, row2*col1, row2*col2, row2*col3,
-            row3*col0, row3*col1, row3*col2, row3*col3,
+            row0(col0), row0(col1), row0(col2), row0(col3),
+            row1(col0), row1(col1), row1(col2), row1(col3),
+            row2(col0), row2(col1), row2(col2), row2(col3),
+            row3(col0), row3(col1), row3(col2), row3(col3),
         )
 
     def rotatex(self, angle):

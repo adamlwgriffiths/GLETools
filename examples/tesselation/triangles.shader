@@ -21,9 +21,9 @@ control:
         tc_position[gl_InvocationID] = v_position[gl_InvocationID];
         if (gl_InvocationID == 0){
             gl_TessLevelInner[0] = inner_level;
-            gl_TessLevelOuter[0] = outer_level;
-            gl_TessLevelOuter[1] = outer_level;
-            gl_TessLevelOuter[2] = outer_level;
+            gl_TessLevelOuter[0] = outer_level; // 1 and 2
+            gl_TessLevelOuter[1] = outer_level; // 2 and 0
+            gl_TessLevelOuter[2] = outer_level; // 0 and 1
         }
     }
 
