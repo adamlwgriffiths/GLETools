@@ -9,6 +9,7 @@ from __future__ import with_statement
 
 from gletools.gl import *
 from .util import Context, DependencyException, Group, gen_buffers, enabled, get
+from .shader import ShaderProgram
 from ctypes import c_float, c_int, c_uint, sizeof
 
 def vertex_pointer(size, type, stride):
@@ -128,42 +129,69 @@ class VertexObject(object):
         with self:
             glDrawElementsInstancedEXT(primitive, self.size, GL_UNSIGNED_INT, None, amount)
 
-'''
 class Buffer4(object):
-    def __init__(self, size, data):
-        if not isinstance(data, ctype*len(data)):
-            data = (c_float*len(data))(*data)
+    def __init__(self, name, size, count, data):
+        self.name = name
+        self.size = size
 
         self.id = gen_buffers()
-        self.size = size
+
+        if getattr(data, '_type_', None) != c_float:
+            data = (c_float*count)(*data)
+
+        self.count = count
+
         glBindBuffer(GL_ARRAY_BUFFER, self.id);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, count*size*sizeof(c_float), data, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     def bind(self):
-        glBindBuffer(GL_ARRAY_BUFFER, self.id)
-        glVertexAttribPointer(name, self.size, GL_FLOAT, GL_FALSE, 0, 0)
+        location = ShaderProgram.current.attrib_location(self.name)
+        if location >= 0:
+            glEnableVertexAttribArray(location)
+            glBindBuffer(GL_ARRAY_BUFFER, self.id)
+            glVertexAttribPointer(location, self.size, GL_FLOAT, GL_FALSE, 0, 0)
 
-class VertexObject4(object):
-    def __init__(self, indices, **attribs):
-        self.id = gen_buffers()
-        self.size = len(indices)
+class VBO(object):
+    def __init__(self, count, indices=None, **attribs):
+        self.count = count
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.id)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), data, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+        if indices:
+            self.indices = gen_buffers()
+            if not isinstance(indices, c_uint*len(indices)):
+                indices = (c_uint*len(indices))(*indices)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.indices)
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*sizeof(c_uint), indices, GL_STATIC_DRAW);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+        else:
+            self.indices = None
 
+        self.buffers = []
         for attrib, data in attribs.items():
+            name, size = attrib.split('_')
+            size = int(size)
+            self.buffers.append(Buffer4(
+                name = name,
+                size = size,
+                count = count,
+                data = data,
+            ))
 
     def draw(self, primitive=GL_TRIANGLES):
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT | GL_CLIENT_PIXEL_STORE_BIT)
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.id)
+        if self.indices:
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.indices)
+
         for buffer in self.buffers:
             buffer.bind()
-        glDrawElements(primitive, self.size, GL_UNSIGNED_INT, 0)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+
+        if self.indices:
+            glDrawElements(primitive, self.count, GL_UNSIGNED_INT, 0)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+        else:
+            glDrawArrays(primitive, 0, self.count)
+
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         
         glPopClientAttrib()
-'''

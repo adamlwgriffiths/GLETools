@@ -27,17 +27,25 @@ def enabled(enum):
     return glIsEnabled(enum)
 
 class Context(object):
+    current = None
+    previous = []
+
     def __init__(self):
         self.stack = list()
 
     def __enter__(self):
         self._enter()
         self.stack.append(get(self._get))
+        cls = self.__class__
+        cls.previous.append(cls.current)
+        cls.current = self
         self.bind(self.id)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.check()
         id = self.stack.pop(-1)
+        cls = self.__class__
+        cls.current = cls.previous.pop(-1)
         self.bind(id)
         self._exit()
 

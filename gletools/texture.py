@@ -9,7 +9,7 @@ from __future__ import with_statement
 
 from gletools.gl import *
 from .util import Context, DependencyException, quad, ExtensionMissing
-from ctypes import string_at, sizeof, byref, c_char_p, cast, c_void_p, POINTER, memmove
+from ctypes import string_at, sizeof, byref, c_char_p, cast, c_void_p, POINTER, memmove, c_ubyte, string_at
 
 try:
     import Image
@@ -22,6 +22,11 @@ __all__ = ['Texture']
 class Object(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+def gen_texture():
+    id = GLuint()
+    glGenTextures(1, byref(id))
+    return id
 
 class Texture(Context):
 
@@ -147,9 +152,7 @@ class Texture(Context):
         self.unit = unit
         spec = self.spec = self.specs[format]
         self.buffer_type = (spec.type.obj * (width * height * spec.channels.count))
-        id = self.id = GLuint()
-
-        glGenTextures(1, byref(id))
+        id = self.id = gen_texture()
         if data:
             if isinstance(data, str):
                 pointer = cast(c_char_p(data), c_void_p)
@@ -348,8 +351,7 @@ class CubeMap(Context):
 
     def __init__(self, width, height, data):
         Context.__init__(self)
-        id = self.id = GLuint()
-        glGenTextures(1, byref(id))
+        id = self.id = gen_texture()
         self.width = width
         self.height = height
 
@@ -416,3 +418,84 @@ class CubeMap(Context):
         data = image.tostring()
         
         return cls(width, height, data)
+
+class Texture1D(Context):
+    target = GL_TEXTURE_1D
+    _get = GL_TEXTURE_BINDING_1D
+
+    def __init__(self, data, unit=GL_TEXTURE0, ctype=c_ubyte, format=GL_LUMINANCE, type=GL_UNSIGNED_BYTE, internal_format=GL_LUMINANCE):
+        Context.__init__(self)
+        data = (ctype*len(data))(*data)
+        self.unit = unit
+
+        self.id = gen_texture()
+        self.bind(self.id)
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexImage1D(
+            GL_TEXTURE_1D, 0, internal_format,
+            len(data), 0,
+            format, type,
+            data,
+        )
+        self.bind(0)
+
+    def _enter(self):
+        glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT)
+        glActiveTexture(self.unit)
+        glEnable(self.target)
+
+    def bind(self, id):
+        glBindTexture(GL_TEXTURE_1D, id)
+
+    def _exit(self):
+        glPopAttrib()
+
+class ArrayTexture(Context):
+    target = GL_TEXTURE_2D_ARRAY
+    _get = GL_TEXTURE_BINDING_2D_ARRAY
+
+    def __init__(self, data, width, height, slice_count, format=GL_RGBA, type=GL_UNSIGNED_BYTE, internal_format=GL_RGBA, unit=GL_TEXTURE0, mipmaps=4):
+        Context.__init__(self)
+        self.unit = unit
+       
+        self.id = gen_texture()
+        self.bind(self.id)
+      
+        if mipmaps > 0:
+            glTexParameteri(self.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+            glTexParameteri(self.target, GL_TEXTURE_BASE_LEVEL, 0)
+            glTexParameteri(self.target, GL_TEXTURE_MAX_LEVEL, mipmaps)
+        else:
+            glTexParameteri(self.target, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(self.target, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+        pointer = cast(c_char_p(data), c_void_p)
+        glTexImage3D(
+            self.target, 0, internal_format,
+            width, height, slice_count, 0,
+            format, type, pointer,
+        )
+
+        if mipmaps > 0:
+            glGenerateMipmap(self.target)
+
+        self.bind(0)
+
+    @classmethod
+    def raw_open(cls, names, width, height, format=GL_RGBA, type=GL_UNSIGNED_BYTE, internal_format=GL_RGBA, unit=GL_TEXTURE0, ctype=c_ubyte, channels=4, mipmaps=4):
+        slices = [open(name, 'rb').read() for name in names]
+        slice_count = len(slices)
+        base_level = ''.join(slices)
+
+        return cls(base_level, width, height, slice_count, format, type, internal_format, unit, mipmaps)
+
+    def _enter(self):
+        glPushAttrib(GL_TEXTURE_BIT)
+        glActiveTexture(self.unit)
+    
+    def _exit(self):
+        glPopAttrib()
+    
+    def bind(self, id):
+        glBindTexture(self.target, id)

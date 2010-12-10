@@ -6,7 +6,7 @@ from pyglet.gl import *
 
 from gletools import ShaderProgram, Matrix, Texture, Sampler2D, DepthTest
 
-from util import View, make_plane
+from util import View, make_triangles
 
 config = Config(buffers=2, samples=4)
 window = pyglet.window.Window(config=config, fullscreen=True, vsync=False)
@@ -22,18 +22,15 @@ terrain = Texture.raw_open('data/patches/snowy_mountains.terrain',
     width=size, height=size, format=GL_RGBA32F,
     unit=GL_TEXTURE1, clamp='st',
 )
-noise_tile = Texture.open('data/tilable_noise.png', 
-    mipmap=4, filter=GL_LINEAR_MIPMAP_LINEAR, unit=GL_TEXTURE2,
-)
 
 program = ShaderProgram.open('terrain.shader',
     diffuse = Sampler2D(GL_TEXTURE0),
     terrain = Sampler2D(GL_TEXTURE1),
-    noise_tile = Sampler2D(GL_TEXTURE2),
-    lod_factor = 4.0,
 )
 
-vbo = make_plane(128, 128)
+normals = ShaderProgram.open('normals.shader')
+
+vbo = make_triangles(128, 128, terrain)
 fps = pyglet.clock.ClockDisplay(color=(144.0/255.0,195.0/255.0,6.0/255.0,0.5))
 
 @window.event
@@ -45,16 +42,24 @@ def on_draw():
     modelview = view.matrix * model
 
     program.vars.mvp = projection * modelview
+    program.vars.modelview = modelview
+    program.vars.projection = projection
     program.vars.screen_size = float(window.width), float(window.height)
 
-    with nested(DepthTest, diffuse, terrain, noise_tile, program):
-        glPatchParameteri(GL_PATCH_VERTICES, 4);
-        vbo.draw(GL_PATCHES)
+    #glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+    with nested(DepthTest, diffuse, terrain, program):
+        vbo.draw(program, GL_PATCHES)
+
+    '''
+    normals.vars.mvp = projection * modelview
+    with nested(DepthTest, normals):
+        vbo.draw(normals, GL_TRIANGLES)
+    '''
    
     fps.draw()
 
 if __name__ == '__main__':
-    glEnable(GL_CULL_FACE)
+    #glEnable(GL_CULL_FACE)
     glCullFace(GL_BACK)
     glClearColor(1,1,1,1)
     pyglet.app.run()

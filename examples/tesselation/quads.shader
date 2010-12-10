@@ -5,6 +5,7 @@ vertex:
     
     void main(void){
         gl_Position = position;
+        gl_Position.x = foobar;
     }
 
 control:

@@ -2,19 +2,18 @@
 
 vertex:
     in vec4 position;
-    uniform sampler2D terrain;
-    uniform mat4 modelview;
-    uniform mat4 projection;
+    //in vec3 normal;
+    //out vec3 color;
+    uniform mat4 mvp;
     
     void main(void){
-        vec2 texcoord = position.xy;
-        float height = texture(terrain, texcoord).a;
-        vec4 displaced = vec4(position.x, position.y, height, 1.0);
-        gl_Position = projection * modelview * displaced;
+        //color = normal;
+        gl_Position = mvp * position;
     }
 
 fragment:
     out vec4 fragment;
+    //in vec3 color;
     void main(){
-        fragment = vec4(1, 0, 0, 1);
+        fragment = vec4(1);
     }

@@ -171,44 +171,6 @@ class Matrix(Variable):
             col3.x, col3.y, col3.z, col3.w,
         )
 
-    '''
-    #from the gluPerspective manpage, works, but the math is broken if not used trough opengl
-    @classmethod
-    def perspective(cls, width, height, fov, near, far):
-        assert near > 0.0 and near < far
-
-        aspect = float(width)/float(height)
-        
-        f = 1.0/tan((fov*pi)/360.0)
-
-        return cls(
-            f/aspect,   0.0, 0.0,                           0.0,
-            0.0,          f, 0.0,                           0.0,
-            0.0,        0.0, (far+near)/(near-far),         -1.0,
-            0.0,        0.0, (2.0*far*near) / (near-far),   0.0,
-        )
-
-    #alternative from http://www.opengl.org/wiki/GluPerspective_code, it's better but the math is still borked
-    @classmethod
-    def perspective(cls, width, height, fov, near, far):
-        aspect = float(width)/float(height)
-        y = near * tan((fov*pi)/360.0)
-        x = y * aspect
-
-        left = -x
-        right = x
-        top = y
-        bottom = -y
-        
-        return cls(
-            (2.0*near)/(right-left),    0.0,                        0.0,                    0.0,
-            0.0,                        (2.0*near)/(top-bottom),    0.0,                    0.0,
-            (right+left)/(right-left),  (top+bottom)/(top-bottom),  (-far-near)/(far-near), -1.0,
-            0.0,                        0.0,                        (-2.0*far)/(far-near),  0.0,
-        )
-    '''
-
-    #the opengl redbook, somebody *has* to get this right sooner or later
     @classmethod
     def perspective(cls, width, height, fov, n, f):
         aspect = float(width)/float(height)
@@ -227,9 +189,42 @@ class Matrix(Variable):
             0.0,            0.0,            -1.0,           0.0,
         )
 
+    @classmethod
+    def inverse_perspective(cls, width, height, fov, n, f):
+        aspect = float(width)/float(height)
+        y = n * tan((fov*pi)/360.0)
+        x = y * aspect
+        
+        l = -x
+        r = x
+        t = y
+        b = -y
+        
+        return cls(
+            (r-l)/(2.0*n),  0.0,            0.0,                (r+l)/(2*n),
+            0.0,            (t-b)/(2.0*n),  0.0,                (t+b)/(2*n),
+            0.0,            0.0,            0.0,                -1.0,
+            0.0,            0.0,            -(f-n)/(2.0*f*n),   (f+n)/(2.0*f*n),
+        )
+
     def do_set(self, location):
         glUniformMatrix4fv(location, 1, GL_TRUE, self.values)
 
-if __name__ == '__main__':
-    matrix1 = Matrix()
-    matrix2 = Matrix()
+    @property
+    def mat3(self):
+        row0 = self.row(0)
+        row1 = self.row(1)
+        row2 = self.row(2)
+
+        return Matrix3(
+            row0.x, row0.y, row0.z, 
+            row1.x, row1.y, row1.z,
+            row2.x, row2.y, row2.z,
+        )
+
+class Matrix3(Variable):
+    def __init__(self, *values):
+        self.values = (c_float*9)(*values)
+    
+    def do_set(self, location):
+        glUniformMatrix3fv(location, 1, GL_TRUE, self.values)

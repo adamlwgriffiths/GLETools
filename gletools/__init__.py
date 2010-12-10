@@ -6,7 +6,7 @@
 """
 
 from .framebuffer import Framebuffer
-from .texture import Texture, CubeMap
+from .texture import Texture, CubeMap, Texture1D, ArrayTexture
 from .depthbuffer import Depthbuffer
 from .shader import FragmentShader, VertexShader, ShaderProgram, Sampler2D, Mat4, UniformArray, TessControlShader, TessEvalShader, GeometryShader
 from .util import (
@@ -14,4 +14,4 @@ from .util import (
     Lighting, Color
 )
 from .matrix import Matrix, Vector
-from .vertexbuffer import VertexObject
+from .vertexbuffer import VertexObject, VBO

@@ -14,12 +14,17 @@ from pyglet.gl.glext_arb import *
 from .util import Context
 
 import re
+import os
 
 __all__ = 'VertexShader', 'FragmentShader', 'ShaderProgram', 'TessControlShader', 'TessEvalShader', 'GeometryShader'
 
 class GLObject(object):
     _del = glDeleteObjectARB
-    class Exception(Exception): pass
+    class Error(Exception): pass
+    class Extension(Error): pass
+    class Compile(Error): pass
+    class Link(Error): pass
+    class Validate(Error): pass
 
     def log(self):
         length = c_int(0)
@@ -32,11 +37,10 @@ class GLObject(object):
         self._del(self.id)
 
 class Shader(GLObject):
-    
     def __init__(self, source, filename='string'):
         self.filename = filename
         if not gl_info.have_extension(self.ext):
-            raise self.Exception('file: %s, %s extension is not available' % (filename, self.ext))
+            raise self.Extension('file: %s, %s extension is not available' % (filename, self.ext))
         self.id = glCreateShaderObjectARB(self.type)
         self.source = source
         ptr = cast(c_char_p(source), POINTER(c_char))
@@ -48,7 +52,7 @@ class Shader(GLObject):
         glGetObjectParameterivARB(self.id, GL_OBJECT_COMPILE_STATUS_ARB, byref(status))
         if status.value == 0:
             error = self.log()
-            raise self.Exception('%s file: %s, failed to compile: \n%s' % (self.__class__.__name__, filename, error))
+            raise self.Compile(error)
     
     @classmethod
     def open(cls, file):
@@ -170,6 +174,36 @@ class Vars(object):
                 if location != -1:
                     setter(location, value)
 
+class SourceLine(object):
+    stage_match = re.compile('(vertex|control|eval|geometry|fragment):')
+    stage_parse = re.compile('(vertex|control|eval|geometry|fragment): *(on|off)?')
+    
+    import_match = re.compile('import: +(.+)')
+
+    def __init__(self, filename, n, text):
+        self.filename = filename
+        self.n = n
+        self.text = text
+
+    def __repr__(self):
+        return self.text
+
+    def stage(self):
+        if self.stage_match.match(self.text):
+            typename, enabled = self.stage_parse.match(self.text).groups()
+            enabled = not enabled == 'off'
+            return typename, enabled
+        else:
+            return None, None
+
+    def import_directive(self):
+        match = self.import_match.search(self.text)
+        if match:
+            return match.group(1)
+
+    def compile(self, module_number):
+        return '#line %i %i\n%s\n' % (self.n+1, module_number, self.text)
+
 class ShaderProgram(GLObject, Context):
     _get = GL_CURRENT_PROGRAM
     
@@ -189,6 +223,9 @@ class ShaderProgram(GLObject, Context):
         for name, value in variables.items():
             setattr(self.vars, name, value)
 
+    def attrib_location(self, name):
+        return glGetAttribLocation(self.id, name)
+
     def link(self):
         glLinkProgramARB(self.id)
        
@@ -196,25 +233,96 @@ class ShaderProgram(GLObject, Context):
         glGetObjectParameterivARB(self.id, GL_OBJECT_LINK_STATUS_ARB, byref(status))
         if status.value == 0:
             error = self.log()
-            raise self.Exception('failed to link:\n%s' % error)
+            raise self.Link(error)
 
         glValidateProgram(self.id)
         glGetObjectParameterivARB(self.id, GL_VALIDATE_STATUS, byref(status))
         if status.value == 0:
             error = self.log()
-            raise self.Exception('failed to validate:\n%s' % error)
-
+            raise self.Validate(error)
     
     def uniform_location(self, name):
         return glGetUniformLocation(self.id, name)
 
+    @staticmethod
+    def getlines(filename):
+        return [
+            SourceLine(filename, n, line)
+            for n, line in
+            enumerate(open(filename).read().split('\n'))
+        ]
+
+    @staticmethod
+    def get_version(lines):
+        for line in lines:
+            if line.text.startswith('#version'):
+                version = line.text
+                lines.remove(line)
+                return version
+
+    @staticmethod
+    def split_stages(lines):
+        stage = []
+        typename = None
+        stages = {}
+
+        for line in lines:
+            new_type, enabled = line.stage()
+            if new_type:
+                if stage and typename:
+                    stages[typename] = stage
+                    stage = []
+                typename = new_type
+            else:
+                stage.append(line)
+
+        if stage and typename:
+            stages[typename] = stage
+
+        return stages
+
+    @staticmethod
+    def split_imports(lines):
+        imports = []
+        sourcelines = []
+        for line in lines:
+            name = line.import_directive()
+            if name:
+                dirname = os.path.dirname(line.filename)
+                filename = os.path.abspath(os.path.join(dirname, '%s.shader' % name))
+                imports.append(filename)
+            else:
+                sourcelines.append(line)
+
+        return imports, sourcelines
+
+    @classmethod
+    def process_imports(cls, lines):
+        todo = [lines]
+        chunks = []
+        processed = set()
+        while todo:
+            lines = todo.pop(0) 
+            imports, sourcelines = cls.split_imports(lines)
+            chunks.insert(0, sourcelines)
+            for filename in imports:
+                if filename not in processed:
+                    lines = cls.getlines(filename)
+                    todo.append(lines)
+                    processed.add(filename)
+
+        result = []
+        for lines in chunks:
+            result.extend(lines)
+        return result
+        
     @classmethod
     def open(cls, name, **variables):
-        lines = open(name).read().split('\n')
-        shaders = []
-        shader = None
-        sourcelines = []
-        version = ''
+        filename = os.path.abspath(name)
+        lines = cls.getlines(filename)
+        version = cls.get_version(lines)
+        stages = cls.split_stages(lines)
+
         types = {
             'vertex'    : VertexShader,
             'control'   : TessControlShader,
@@ -222,29 +330,48 @@ class ShaderProgram(GLObject, Context):
             'geometry'  : GeometryShader,
             'fragment'  : FragmentShader,
         }
-        matcher = re.compile('(vertex|control|eval|geometry|fragment):')
 
-        for line in lines:
-            match = matcher.search(line)
-            if line.startswith('#version'):
-                version = line
-            elif match:
-                if shader:
-                    source = '\n'.join(sourcelines)
-                    shaders.append(shader(source, name))
-
-                if 'off' in line:
-                    shader = None
+        modules = {}
+        module_count = 0
+        mapping = {}
+        shaders = []
+       
+        try:
+            for typename, stage in stages.items():
+                if version:
+                    source = '%s\n' % version
                 else:
-                    typename = match.group(1)
-                    shader = types[typename]
+                    source = ''
+                lines = cls.process_imports(stage)
+                for line in lines:
+                    module = modules.get(line.filename)
+                    if not module:
+                        module = modules[line.filename] = {}
+                        mapping[line.filename] = module_count
+                        module_count += 1
 
-                sourcelines = [version]
-            else:
-                sourcelines.append(line)
-                
-        if shader:
-            source = '\n'.join(sourcelines)
-            shaders.append(shader(source, name))
+                    module_number = mapping[line.filename]
+                    source += line.compile(module_number)
+                    module[line.n] = line
 
-        return cls(*shaders, **variables)
+                shader = types[typename]
+                shaders.append(shader(source, filename))
+            return cls(*shaders, **variables)
+        except (cls.Compile, cls.Link, cls.Validate), error:
+            matcher = re.compile('(\d+)\((\d+)\) : (.+)')
+            errors = []
+            mapping = dict((n, filename) for filename, n in mapping.items())
+            for line in error.args[0].strip().split('\n'):
+                match = matcher.search(line)
+                if match:
+                    module_number, line_number, message = match.groups()
+                    module_number = int(module_number)
+                    line_number = int(line_number)-1
+                    filename = mapping[module_number]
+                    module = modules[filename]
+                    source_line = module[line_number]
+                    line = 'File: %s Line: %s\n  %s\n  %s\n' % (filename, line_number, source_line.text.strip(), message)
+                errors.append(line)
+
+            message = '\n' + '\n'.join(errors)
+            raise error.__class__(message)
