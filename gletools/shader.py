@@ -81,9 +81,16 @@ else:
     class TessControlShader(object): pass
     class TessEvalShader(object): pass
 
-class GeometryShader(Shader):
-    type = GL_GEOMETRY_SHADER
-    ext = 'GL_ARB_geometry_shader4'
+if gl_info.have_version(4, 0):
+    class GeometryShader(Shader):
+        type = GL_GEOMETRY_SHADER
+        ext = 'GL_ARB_geometry_shader4'
+elif gl_info.have_extension('GL_ARB_geometry_shader4'):
+    class GeometryShader(Shader):
+        type = GL_GEOMETRY_SHADER_ARB
+        ext = 'GL_ARB_geometry_shader4'
+else:
+    class GeometryShader(object): pass
 
 class Variable(object):
     def set(self, program, name):
