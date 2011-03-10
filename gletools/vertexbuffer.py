@@ -137,12 +137,12 @@ class Buffer4(object):
         self.id = gen_buffers()
 
         if getattr(data, '_type_', None) != c_float:
-            data = (c_float*count)(*data)
+            data = (c_float*len(data))(*data)
 
         self.count = count
 
         glBindBuffer(GL_ARRAY_BUFFER, self.id);
-        glBufferData(GL_ARRAY_BUFFER, count*size*sizeof(c_float), data, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, len(data)*sizeof(c_float), data, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     def bind(self):

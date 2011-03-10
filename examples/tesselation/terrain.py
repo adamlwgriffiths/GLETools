@@ -48,7 +48,7 @@ def on_draw():
 
     #glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
     with nested(DepthTest, diffuse, terrain, program):
-        vbo.draw(program, GL_PATCHES)
+        vbo.draw(GL_PATCHES)
 
     '''
     normals.vars.mvp = projection * modelview

@@ -17,8 +17,8 @@ vbo = VertexObject(
 )
 
 program = ShaderProgram.open('quads.shader',
-    inner_level = 4.0,
-    outer_level = 4.0,
+    inner_level = 1.0,
+    outer_level = 1.0,
     simple      = False,
 )
 

@@ -1,11 +1,10 @@
-#version 400
+#version 410
 
 vertex:
     in vec4 position;
     
     void main(void){
         gl_Position = position;
-        gl_Position.x = foobar;
     }
 
 control:
@@ -51,6 +50,17 @@ eval:
                   u *   v * gl_in[2].gl_Position +
                 omu *   v * gl_in[3].gl_Position);
         }
+    }
+
+geometry:
+    layout(triangles) in;
+    layout(triangle_strip, max_vertices = 3) out;
+
+    void main(){
+        gl_Position = gl_in[0].gl_Position; EmitVertex();
+        gl_Position = gl_in[1].gl_Position; EmitVertex();
+        gl_Position = gl_in[2].gl_Position; EmitVertex();
+        EndPrimitive();
     }
 
 fragment:

@@ -212,6 +212,7 @@ def make_triangles(width, height, terrain=None):
             indices[offset:offset+6] = p1, p2, p3, p1, p3, p4
 
     return VBO(
+        count       = len(indices),
         indices     = indices,
         position_4  = position,
         normal_3    = normals,

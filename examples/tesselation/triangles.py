@@ -1,14 +1,15 @@
 import pyglet
 from pyglet.gl import *
 
-from gletools import ShaderProgram, VertexObject, Matrix
+from gletools import ShaderProgram, VertexObject, Matrix, VBO
 
 window = pyglet.window.Window()
 rotation = 0.0
 
-vbo = VertexObject(
-    indices = [0, 1, 2, 0, 2, 3],
-    v4f     = [
+vbo = VBO(
+    count       = 6,
+    indices     = [0, 1, 2, 0, 2, 3],
+    position_4  = [
         +1, +1, 0, 1,
         +1, -1, 0, 1,
         -1, -1, 0, 1,
