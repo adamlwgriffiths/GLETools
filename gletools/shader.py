@@ -69,13 +69,17 @@ class FragmentShader(Shader):
     type = GL_FRAGMENT_SHADER_ARB
     ext = 'GL_ARB_fragment_program'
 
-class TessControlShader(Shader):
-    type = GL_TESS_CONTROL_SHADER
-    ext = 'GL_ARB_tessellation_shader'
+if gl_info.have_version(4, 0) or gl_info.have_extension('GL_ARB_tessellation_shader'):
+    class TessControlShader(Shader):
+        type = GL_TESS_CONTROL_SHADER
+        ext = 'GL_ARB_tessellation_shader'
 
-class TessEvalShader(Shader):
-    type = GL_TESS_EVALUATION_SHADER
-    ext = 'GL_ARB_tessellation_shader'
+    class TessEvalShader(Shader):
+        type = GL_TESS_EVALUATION_SHADER
+        ext = 'GL_ARB_tessellation_shader'
+else:
+    class TessControlShader(object): pass
+    class TessEvalShader(object): pass
 
 class GeometryShader(Shader):
     type = GL_GEOMETRY_SHADER
