@@ -15,7 +15,11 @@ try:
     import Image
     has_pil = True
 except:
-    has_pil = False
+    try:
+        from PIL import Image
+        has_pil = True
+    except:
+        has_pil = False
 
 __all__ = ['Texture']
 
